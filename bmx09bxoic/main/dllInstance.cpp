@@ -6,7 +6,7 @@ void createConsole()
 {
     AllocConsole();
     freopen_s(&f, "CONOUT$", "w", stdout);
-    SetConsoleTitleA("52hook");
+    SetConsoleTitleA("bmx09bxoic");
 
 }
 void destroyConsole()

@@ -12,15 +12,13 @@
 #include "keybind.h"
 #include "utils.h"
 
-namespace gui::items::colorpicker
+namespace gui::items::multicombobox
 {
-using namespace gui;
-
-inline void addColorPickerBind(ColorPicker& colorPicker)
+inline void addMultiComboBoxBind(MultiComboBox& multiComboBox)
 {
-    auto& item = colorPicker.item;
+    auto& item = multiComboBox.item;
     auto& newBind = item.binds.emplace_back();
-    newBind.name = "ColorPickerBind-For " + item.name + " " + uuid::getUuid();
+    newBind.name = "MultiComboBoxBind-For " + item.name + " " + uuid::getUuid();
 
     getMenuInstance().keyBindManager.addBind(
         &item.value,
@@ -30,15 +28,35 @@ inline void addColorPickerBind(ColorPicker& colorPicker)
         item.itemType,
         0,
         newBind.name,
-        colorPicker.item.name
+        multiComboBox.item.name
     );
 }
 
-inline decltype(&addColorPickerBind) colorPickerBindCallback = addColorPickerBind;
+inline decltype(&addMultiComboBoxBind) multiComboBoxBindCallback = addMultiComboBoxBind;
 
-inline void render(ColorPicker& colorPicker)
+inline std::string getActiveItems(uint32_t flags, const std::vector<std::string>& items)
 {
-    auto& item = colorPicker.item;
+    std::string preview;
+    bool first = true;
+
+    for (int i = 0; i < items.size(); ++i) 
+    {
+        uint32_t valueStep = 1 << i;
+        if (flags & valueStep) 
+        {
+            if (!first) 
+                preview += ", ";
+            preview += items[i];
+            first = false;
+        }
+    }
+
+    return preview.empty() ? "None" : preview;
+}
+
+inline void render(MultiComboBox& multiComboBox)
+{
+    auto& item = multiComboBox.item;
 
     std::string itemKey = std::to_string(reinterpret_cast<uintptr_t>(&item));
     std::string itemValueKey = std::to_string(reinterpret_cast<uintptr_t>(&item.value));
@@ -51,9 +69,28 @@ inline void render(ColorPicker& colorPicker)
     std::string bindOpenPopup = "+##" + itemKey;
 
     {
-        ImVec4 col = ImGui::ColorConvertU32ToFloat4(item.value);
-        if (ImGui::ColorEdit4(item.name.c_str(), (float*)&col, ImGuiColorEditFlags_NoInputs))
-            item.value = ImGui::ColorConvertFloat4ToU32(col);
+        auto comboSize = static_cast<int>(item.itemsList.size());
+
+        std::string hiddenName = "##multi-combo-box-for-" + item.name;
+        std::string preview = getActiveItems(item.value, item.itemsList);
+
+        ImGui::Text(getFormattedText(item.name).c_str());
+        if (ImGui::BeginCombo(hiddenName.c_str(), preview.c_str()))
+        {
+            for (int i = 0; i < comboSize; ++i)
+            {
+                const auto step = 1 << i;
+                if (ImGui::Selectable(item.itemsList[i].c_str(), (item.value & step), ImGuiSelectableFlags_DontClosePopups))
+                {
+                    if ((item.value & step))
+                        item.value &= ~step;
+                    else
+                        item.value |= step;
+                }
+            }
+
+            ImGui::EndCombo();
+        }
     }
 
     ImGui::OpenPopupOnItemClick(bindItemPopup.c_str(), ImGuiPopupFlags_MouseButtonRight);
@@ -80,7 +117,7 @@ inline void render(ColorPicker& colorPicker)
 
                 if (ImGui::SmallButton(bindAdd.c_str()))
                 {
-                    colorPickerBindCallback(colorPicker);
+                    multiComboBoxBindCallback(multiComboBox);
 
                     preview.selection = 0;
                     preview.selectedBind.reset();
@@ -113,7 +150,7 @@ inline void render(ColorPicker& colorPicker)
 
                     if (ImGui::SmallButton(bindPlus.c_str()))
                     {
-                        colorPickerBindCallback(colorPicker);
+                        multiComboBoxBindCallback(multiComboBox);
                         preview.selectedBind.reset();
                         preview.selection = bindsIter;
                         continue;
@@ -158,10 +195,30 @@ inline void render(ColorPicker& colorPicker)
             }
 
             value->previewName = getPreviewItemName(*value);
+
             {
-                ImVec4 col = ImGui::ColorConvertU32ToFloat4(value->value);
-                if (ImGui::ColorEdit4(valueName.c_str(), (float*)&col, ImGuiColorEditFlags_NoInputs))
-                    value->value = ImGui::ColorConvertFloat4ToU32(col);
+                auto comboSize = static_cast<int>(item.itemsList.size());
+
+                std::string hiddenName = "##multi-combo-box-for-" + valueName;
+                std::string preview = getActiveItems(value->value, item.itemsList);
+
+                ImGui::Text(getFormattedText(valueName).c_str());
+                if (ImGui::BeginCombo(hiddenName.c_str(), preview.c_str()))
+                {
+                    for (int i = 0; i < comboSize; ++i)
+                    {
+                        const auto step = 1 << i;
+                        if (ImGui::Selectable(item.itemsList[i].c_str(), (value->value & step), ImGuiSelectableFlags_DontClosePopups))
+                        {
+                            if ((value->value & step))
+                                value->value &= ~step;
+                            else
+                                value->value |= step;
+                        }
+                    }
+
+                    ImGui::EndCombo();
+                }
             }
         }
 

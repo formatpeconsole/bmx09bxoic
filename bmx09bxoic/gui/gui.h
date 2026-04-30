@@ -63,6 +63,9 @@ struct RageTab
     // TO-DO: Auto Fire, Quick Scope, FOV, Silent Aim
     struct WeaponConfig
     {
+        CheckBox autoFire{};
+        CheckBox autoScope{};
+        Slider<int> fov{};
         MultiComboBox hitBoxes{};
         MultiComboBox multiPoints{};
         Slider<int> pointHeadScale{};

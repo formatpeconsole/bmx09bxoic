@@ -12,14 +12,13 @@
 #include "keybind.h"
 #include "utils.h"
 
-namespace gui::items::slider
+namespace gui::items::combobox
 {
-template<typename T>
-inline void addSliderBind(Slider<T>& slider)
+inline void addComboBoxBind(ComboBox& comboBox)
 {
-    auto& item = slider.item;
+    auto& item = comboBox.item;
     auto& newBind = item.binds.emplace_back();
-    newBind.name = "SliderBind-For " + item.name + " " + uuid::getUuid();
+    newBind.name = "ComboBoxBind-For " + item.name + " " + uuid::getUuid();
 
     getMenuInstance().keyBindManager.addBind(
         &item.value,
@@ -29,43 +28,41 @@ inline void addSliderBind(Slider<T>& slider)
         item.itemType,
         0,
         newBind.name,
-        slider.item.name
+        comboBox.item.name
     );
 }
 
-template<typename T>
-inline decltype(&addSliderBind<T>) bindCallback = addSliderBind<T>;
+inline decltype(&addComboBoxBind) comboBoxBindCallback = addComboBoxBind;
 
-template<typename T>
-inline void render(Slider<T>& slider)
+inline const char* Items_VectorGetter(void* data, int idx)
 {
-    auto& item = slider.item;
+    auto items = reinterpret_cast<std::string*>(data);
+    return items[idx].c_str();
+}
+
+inline void render(ComboBox& comboBox)
+{
+    auto& item = comboBox.item;
 
     std::string itemKey = std::to_string(reinterpret_cast<uintptr_t>(&item));
     std::string itemValueKey = std::to_string(reinterpret_cast<uintptr_t>(&item.value));
 
-    std::string bindItemPopup = "bind-popup-slider##" + itemKey;
+    std::string bindItemPopup = "bind-popup-comboBox##" + itemKey;
     std::string bindCombo = "##binds-for-" + itemValueKey;
 
     std::string bindAdd = "+##bind-add-for-" + itemKey;
 
     std::string bindOpenPopup = "+##" + itemKey;
 
-    if constexpr (std::is_same<T, float>::value)
-    {
-        ImGui::SliderFloat(item.name.c_str(), &item.value, slider.min, slider.max);
-        item.value = std::clamp(item.value, slider.min, slider.max);
-    }
-    else if constexpr (std::is_same<T, int>::value)
-    {
-        ImGui::SliderInt(item.name.c_str(), &item.value, slider.min, slider.max);
-        item.value = std::clamp(item.value, slider.min, slider.max);
-    }
-    else
-    {
-        static_assert(false, "Unsupported slider type");
-    }
+    auto comboSize = static_cast<int>(item.itemsList.size());
 
+    {
+        std::string hiddenName = "##combo-box-for-" + item.name;
+
+        ImGui::Text(getFormattedText(item.name).c_str());
+        ImGui::Combo(hiddenName.c_str(), &item.value, Items_VectorGetter, item.itemsList.data(), comboSize);
+        item.value = std::clamp(item.value, 0, comboSize - 1);
+    }
     ImGui::OpenPopupOnItemClick(bindItemPopup.c_str(), ImGuiPopupFlags_MouseButtonRight);
 
     if (ImGui::BeginPopup(bindItemPopup.c_str()))
@@ -90,7 +87,7 @@ inline void render(Slider<T>& slider)
 
                 if (ImGui::SmallButton(bindAdd.c_str()))
                 {
-                    bindCallback<T>(slider);
+                    comboBoxBindCallback(comboBox);
 
                     preview.selection = 0;
                     preview.selectedBind.reset();
@@ -123,7 +120,7 @@ inline void render(Slider<T>& slider)
 
                     if (ImGui::SmallButton(bindPlus.c_str()))
                     {
-                        bindCallback<T>(slider);
+                        comboBoxBindCallback(comboBox);
                         preview.selectedBind.reset();
                         preview.selection = bindsIter;
                         continue;
@@ -151,7 +148,6 @@ inline void render(Slider<T>& slider)
         if (preview.selectedBind.has_value())
         {
             auto& value = preview.selectedBind.value();
-
             std::string valueName = "Value ##" + value->name;
             std::string bindType = "##bind-type-to" + value->name;
 
@@ -165,26 +161,19 @@ inline void render(Slider<T>& slider)
 
                 ImGui::Text("Current Key");
                 ImGui::SameLine();
-                keybind::keyBindSelector<std::list<BindValues<T>>>(currentBind, value);
+                keybind::keyBindSelector<std::list<BindValues<int>>>(currentBind, value);
             }
 
             value->previewName = getPreviewItemName(*value);
 
             {
-                if constexpr (std::is_same<T, float>::value)
-                {
-                    ImGui::SliderFloat(valueName.c_str(), &value->value, slider.min, slider.max);
-                    value->value = std::clamp(value->value, slider.min, slider.max);
-                }
-                else if constexpr (std::is_same<T, int>::value)
-                {
-                    ImGui::SliderInt(valueName.c_str(), &value->value, slider.min, slider.max);
-                    value->value = std::clamp(value->value, slider.min, slider.max);
-                }
-                else
-                {
-                    static_assert(false, "Unsupported slider type");
-                }
+                auto comboSize = static_cast<int>(item.itemsList.size());
+
+                std::string hiddenName = "##combo-bind-box-for-" + valueName;
+
+                ImGui::Text(getFormattedText(valueName).c_str());
+                ImGui::Combo(hiddenName.c_str(), &value->value, Items_VectorGetter, item.itemsList.data(), static_cast<int>(item.itemsList.size()));
+                value->value = std::clamp(value->value, 0, comboSize - 1);
             }
         }
 

@@ -12,13 +12,13 @@
 #include "keybind.h"
 #include "utils.h"
 
-namespace gui::items::combobox
+namespace gui::items::checkbox
 {
-inline void addComboBoxBind(ComboBox& comboBox)
+inline void addCheckBoxBind(CheckBox& checkbox)
 {
-    auto& item = comboBox.item;
+    auto& item = checkbox.item;
     auto& newBind = item.binds.emplace_back();
-    newBind.name = "ComboBoxBind-For " + item.name + " " + uuid::getUuid();
+    newBind.name = "CheckBox-For " + item.name + " " + uuid::getUuid();
 
     getMenuInstance().keyBindManager.addBind(
         &item.value,
@@ -28,37 +28,31 @@ inline void addComboBoxBind(ComboBox& comboBox)
         item.itemType,
         0,
         newBind.name,
-        comboBox.item.name
+        checkbox.item.name
     );
 }
 
-inline decltype(&addComboBoxBind) comboBoxBindCallback = addComboBoxBind;
+inline decltype(&addCheckBoxBind) checkBoxBindCallback = addCheckBoxBind;
 
-inline const char* Items_VectorGetter(void* data, int idx)
+inline void render(CheckBox& checkbox)
 {
-    auto items = reinterpret_cast<std::string*>(data);
-    return items[idx].c_str();
-}
-
-inline void render(ComboBox& comboBox)
-{
-    auto& item = comboBox.item;
+    auto& item = checkbox.item;
 
     std::string itemKey = std::to_string(reinterpret_cast<uintptr_t>(&item));
     std::string itemValueKey = std::to_string(reinterpret_cast<uintptr_t>(&item.value));
 
-    std::string bindItemPopup = "bind-popup-comboBox##" + itemKey;
+    std::string bindItemPopup = "bind-popup-checkbox##" + itemKey;
     std::string bindCombo = "##binds-for-" + itemValueKey;
 
     std::string bindAdd = "+##bind-add-for-" + itemKey;
 
     std::string bindOpenPopup = "+##" + itemKey;
 
-    auto comboSize = static_cast<int>(item.itemsList.size());
-
     {
-        ImGui::Combo(item.name.c_str(), &item.value, Items_VectorGetter, item.itemsList.data(), comboSize);
-        item.value = std::clamp(item.value, 0, comboSize - 1);
+        std::string hiddenName = "##checkbox-for-" + item.name;
+        ImGui::Text(getFormattedText(item.name).c_str());
+        ImGui::SameLine();
+        ImGui::Checkbox(hiddenName.c_str(), &item.value);
     }
     ImGui::OpenPopupOnItemClick(bindItemPopup.c_str(), ImGuiPopupFlags_MouseButtonRight);
 
@@ -84,7 +78,7 @@ inline void render(ComboBox& comboBox)
 
                 if (ImGui::SmallButton(bindAdd.c_str()))
                 {
-                    comboBoxBindCallback(comboBox);
+                    checkBoxBindCallback(checkbox);
 
                     preview.selection = 0;
                     preview.selectedBind.reset();
@@ -117,7 +111,7 @@ inline void render(ComboBox& comboBox)
 
                     if (ImGui::SmallButton(bindPlus.c_str()))
                     {
-                        comboBoxBindCallback(comboBox);
+                        checkBoxBindCallback(checkbox);
                         preview.selectedBind.reset();
                         preview.selection = bindsIter;
                         continue;
@@ -158,15 +152,16 @@ inline void render(ComboBox& comboBox)
 
                 ImGui::Text("Current Key");
                 ImGui::SameLine();
-                keybind::keyBindSelector<std::list<BindValues<int>>>(currentBind, value);
+                keybind::keyBindSelector<std::list<BindValues<bool>>>(currentBind, value);
             }
 
             value->previewName = getPreviewItemName(*value);
 
             {
-                auto comboSize = static_cast<int>(item.itemsList.size());
-                ImGui::Combo(valueName.c_str(), &value->value, Items_VectorGetter, item.itemsList.data(), static_cast<int>(item.itemsList.size()));
-                item.value = std::clamp(item.value, 0, comboSize - 1);
+                std::string hiddenName = "##checkbox-for-" + valueName;
+                ImGui::Text(getFormattedText(valueName).c_str());
+                ImGui::SameLine();
+                ImGui::Checkbox(hiddenName.c_str(), &value->value);
             }
         }
 

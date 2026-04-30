@@ -117,7 +117,9 @@ void loadConfig()
     {
         for (int i = 0; i < MAX_CONFIGS; ++i)
         {
-            LOAD_ITEM(rageSection, instance.rage.config[i].hitBoxes);
+            LOAD_ITEM(rageSection, instance.rage.config[i].autoFire);
+            LOAD_ITEM(rageSection, instance.rage.config[i].autoScope);
+            LOAD_ITEM(rageSection, instance.rage.config[i].fov);
             LOAD_ITEM(rageSection, instance.rage.config[i].multiPoints);
             LOAD_ITEM(rageSection, instance.rage.config[i].pointHeadScale);
             LOAD_ITEM(rageSection, instance.rage.config[i].pointBodyScale);
@@ -143,6 +145,9 @@ void saveConfig()
     {
         for (int i = 0; i < MAX_CONFIGS; ++i)
         {
+            SAVE_ITEM(rageSection, instance.rage.config[i].autoFire);
+            SAVE_ITEM(rageSection, instance.rage.config[i].autoScope);
+            SAVE_ITEM(rageSection, instance.rage.config[i].fov);
             SAVE_ITEM(rageSection, instance.rage.config[i].hitBoxes);
             SAVE_ITEM(rageSection, instance.rage.config[i].multiPoints);
             SAVE_ITEM(rageSection, instance.rage.config[i].pointHeadScale);

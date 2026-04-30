@@ -60,21 +60,6 @@ std::optional<std::vector<std::string>> getItemList(void* ptr, int type)
     }
 }
 
-// get text without hashtags for ui naming
-// for example
-// we have name of item in UI called "Hit Chance##rage"
-// but ##rage is used just to make unique hash
-// so for UI Bind list better visualize name without this unique hash
-// in result it will be "Hit Chance"
-std::string getFormattedText(const std::string& text)
-{
-    size_t pos = text.find("##");
-    if (pos == std::string::npos)
-        return text;
-
-    return text.substr(0, pos);
-}
-
 // in KeyBindManager i had to save value in string format for UI purposes
 // now you have to get this value and visualize in ur UI however you want
 std::string getBindValueFromString(const std::string& value, void* ptr, int itemType)
@@ -197,27 +182,90 @@ enum UI_TABS
 int tabSelection = 0;
 std::vector<std::string> tabs = { "Rage", "Legit", "Visuals", "Misc", "Skins", "Configs", "LUA" };
 
+std::vector<std::string> rageSubTab = { "Aim", "Anti-Aim" };
+
 // TO-DO:
 // subtabs
 // MAIN (with weapon config)
 // ANTI-AIM (stand/move/air/crouch/slowwalk)
+void renderSubTabs(const std::vector<std::string>& tabs, int& selection) 
+{
+    ImGui::BeginGroup();
+    for (int i = 0; i < tabs.size(); ++i)
+    {
+        if (ImGui::Button(tabs[i].c_str(), ImVec2(tabs[i].length() * 10, 18)))
+            selection = i;
+
+        ImGui::SameLine();
+    }
+    ImGui::EndGroup();
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+}
+
 void renderRageTab()
 {
-    combobox::render(getMenuInstance().rage.configSelect);
+    static int subTabSelection = 0;
+    renderSubTabs(rageSubTab, subTabSelection);
 
-    auto& itemFromWeaponConfig = getMenuInstance().rage.config[getMenuInstance().rage.configSelect.item.value];
+    ImVec2 itemsChildSize = ImVec2(374, 440);
+    ImVec2 configChildSize = ImVec2(374, 60);
 
-    if (getMenuInstance().rage.configSelect.item.value != 0)
-        checkbox::render(itemFromWeaponConfig.overrideGlobal);
+    switch (subTabSelection)
+    {
+    case 0:
+    {
+        ImGui::BeginChild("Main##rage", itemsChildSize, ImGuiChildFlags_Borders, ImGuiWindowFlags_NoScrollbar);
+        {
 
-    multicombobox::render(itemFromWeaponConfig.hitBoxes);
-    multicombobox::render(itemFromWeaponConfig.multiPoints);
-    slider::render(itemFromWeaponConfig.pointHeadScale);
-    slider::render(itemFromWeaponConfig.pointBodyScale);
-    checkbox::render(itemFromWeaponConfig.preferBody);
-    slider::render(itemFromWeaponConfig.hitChance);
-    slider::render(itemFromWeaponConfig.minDamage);
-    multicombobox::render(itemFromWeaponConfig.quickStop);
+        }
+        ImGui::EndChild();
+
+        ImGui::SameLine();
+
+        ImGui::BeginGroup();
+        {
+            ImGui::BeginChild("Weapon Config Selector##rage", configChildSize, ImGuiChildFlags_Borders, ImGuiWindowFlags_NoScrollbar);
+            {
+                ImGui::PushItemWidth(configChildSize.x * 0.958f);
+                combobox::render(getMenuInstance().rage.configSelect);
+                ImGui::PopItemWidth();
+            }
+            ImGui::EndChild();
+            ImGui::Spacing();
+            ImGui::BeginChild("Weapon Config##rage", itemsChildSize, ImGuiChildFlags_Borders, ImGuiWindowFlags_NoScrollbar);
+            {
+                auto& itemFromWeaponConfig = getMenuInstance().rage.config[getMenuInstance().rage.configSelect.item.value];
+
+                ImGui::PushItemWidth(configChildSize.x * 0.958f);
+                if (getMenuInstance().rage.configSelect.item.value != 0)
+                    checkbox::render(itemFromWeaponConfig.overrideGlobal);
+
+                checkbox::render(itemFromWeaponConfig.autoFire);
+                checkbox::render(itemFromWeaponConfig.autoScope);
+                slider::render(itemFromWeaponConfig.fov);
+                multicombobox::render(itemFromWeaponConfig.hitBoxes);
+                multicombobox::render(itemFromWeaponConfig.multiPoints);
+                slider::render(itemFromWeaponConfig.pointHeadScale);
+                slider::render(itemFromWeaponConfig.pointBodyScale);
+                checkbox::render(itemFromWeaponConfig.preferBody);
+                slider::render(itemFromWeaponConfig.hitChance);
+                slider::render(itemFromWeaponConfig.minDamage);
+                multicombobox::render(itemFromWeaponConfig.quickStop);
+                ImGui::PopItemWidth();
+            }
+            ImGui::EndChild();
+        }
+        ImGui::EndGroup();
+    }
+    break;
+    case 1:
+    {
+
+    }
+    break;
+    }
 }
 
 void renderLegitTab()
@@ -266,7 +314,7 @@ void renderMainUI()
     {
         ImGui::SetNextWindowSize(ImVec2(780, 650));
 
-        std::string windowTitle = "52HOOK - " + std::string(__DATE__);
+        std::string windowTitle = "BMX09BXOIC - " + std::string(__DATE__);
         ImGui::Begin(windowTitle.c_str(), &getMenuInstance().opened, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
         {
             using namespace gui::items;
@@ -327,6 +375,9 @@ void Menu::initConfig()
     for (int i = 0; i < MAX_CONFIGS; ++i)
     {
         auto index = std::to_string(i);
+        rage.config[i].autoFire = MAKE_CHECKBOX_RT("Auto Fire##rage" + index, false);
+        rage.config[i].autoScope = MAKE_CHECKBOX_RT("Auto Scope##rage" + index, false);
+        rage.config[i].fov = MAKE_SLIDER_RT("Field of View##rage" + index, 0, 0, 180);
         rage.config[i].hitBoxes = MAKE_MULTICOMBO_RT("Hit Boxes##rage" + index, 0, COMBO_LIST("Head", "Neck", "Chest", "Pelvis", "Stomach", "Arms", "Legs", "Feet"));
         rage.config[i].multiPoints = MAKE_MULTICOMBO_RT("Multi Points##rage" + index, 0, COMBO_LIST("Head", "Neck", "Chest", "Pelvis", "Stomach", "Arms", "Legs", "Feet"));
         rage.config[i].pointHeadScale = MAKE_SLIDER_RT("Head Scale##rage" + index, 0, 0, 100);
@@ -337,7 +388,9 @@ void Menu::initConfig()
         rage.config[i].quickStop = MAKE_MULTICOMBO_RT("Quick Stop##rage" + index, 0, COMBO_LIST("Early", "Between Shots", "In Air", "Ignore Molotov"));
         rage.config[i].overrideGlobal = MAKE_CHECKBOX_RT("Override Global##rage" + index, false);
 
-        itemsInMemory.emplace_back(ITEM_PTR_RT(rage.config[i].hitBoxes));
+        itemsInMemory.emplace_back(ITEM_PTR_RT(rage.config[i].autoFire));
+        itemsInMemory.emplace_back(ITEM_PTR_RT(rage.config[i].autoScope));
+        itemsInMemory.emplace_back(ITEM_PTR_RT(rage.config[i].fov));
         itemsInMemory.emplace_back(ITEM_PTR_RT(rage.config[i].multiPoints));
         itemsInMemory.emplace_back(ITEM_PTR_RT(rage.config[i].pointHeadScale));
         itemsInMemory.emplace_back(ITEM_PTR_RT(rage.config[i].pointBodyScale));

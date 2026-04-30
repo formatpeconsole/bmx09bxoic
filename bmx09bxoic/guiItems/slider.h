@@ -12,13 +12,14 @@
 #include "keybind.h"
 #include "utils.h"
 
-namespace gui::items::multicombobox
+namespace gui::items::slider
 {
-inline void addMultiComboBoxBind(MultiComboBox& multiComboBox)
+template<typename T>
+inline void addSliderBind(Slider<T>& slider)
 {
-    auto& item = multiComboBox.item;
+    auto& item = slider.item;
     auto& newBind = item.binds.emplace_back();
-    newBind.name = "MultiComboBoxBind-For " + item.name + " " + uuid::getUuid();
+    newBind.name = "SliderBind-For " + item.name + " " + uuid::getUuid();
 
     getMenuInstance().keyBindManager.addBind(
         &item.value,
@@ -28,66 +29,47 @@ inline void addMultiComboBoxBind(MultiComboBox& multiComboBox)
         item.itemType,
         0,
         newBind.name,
-        multiComboBox.item.name
+        slider.item.name
     );
 }
 
-inline decltype(&addMultiComboBoxBind) multiComboBoxBindCallback = addMultiComboBoxBind;
+template<typename T>
+inline decltype(&addSliderBind<T>) bindCallback = addSliderBind<T>;
 
-inline std::string getActiveItems(uint32_t flags, const std::vector<std::string>& items)
+template<typename T>
+inline void render(Slider<T>& slider)
 {
-    std::string preview;
-    bool first = true;
-
-    for (int i = 0; i < items.size(); ++i) 
-    {
-        uint32_t valueStep = 1 << i;
-        if (flags & valueStep) 
-        {
-            if (!first) 
-                preview += ", ";
-            preview += items[i];
-            first = false;
-        }
-    }
-
-    return preview.empty() ? "None" : preview;
-}
-
-inline void render(MultiComboBox& multiComboBox)
-{
-    auto& item = multiComboBox.item;
+    auto& item = slider.item;
 
     std::string itemKey = std::to_string(reinterpret_cast<uintptr_t>(&item));
     std::string itemValueKey = std::to_string(reinterpret_cast<uintptr_t>(&item.value));
 
-    std::string bindItemPopup = "bind-popup-comboBox##" + itemKey;
+    std::string bindItemPopup = "bind-popup-slider##" + itemKey;
     std::string bindCombo = "##binds-for-" + itemValueKey;
 
     std::string bindAdd = "+##bind-add-for-" + itemKey;
 
     std::string bindOpenPopup = "+##" + itemKey;
 
+    if constexpr (std::is_same<T, float>::value)
     {
-        auto comboSize = static_cast<int>(item.itemsList.size());
+        std::string hiddenName = "##slider-float-for-" + item.name;
+        ImGui::Text(getFormattedText(item.name).c_str());
+        ImGui::SliderFloat(hiddenName.c_str(), &item.value, slider.min, slider.max);
 
-        std::string preview = getActiveItems(item.value, item.itemsList);
-        if (ImGui::BeginCombo(item.name.c_str(), preview.c_str()))
-        {
-            for (int i = 0; i < comboSize; ++i)
-            {
-                const auto step = 1 << i;
-                if (ImGui::Selectable(item.itemsList[i].c_str(), (item.value & step), ImGuiSelectableFlags_DontClosePopups))
-                {
-                    if ((item.value & step))
-                        item.value &= ~step;
-                    else
-                        item.value |= step;
-                }
-            }
+        item.value = std::clamp(item.value, slider.min, slider.max);
+    }
+    else if constexpr (std::is_same<T, int>::value)
+    {
+        std::string hiddenName = "##slider-int-for-" + item.name;
+        ImGui::Text(getFormattedText(item.name).c_str());
+        ImGui::SliderInt(hiddenName.c_str(), &item.value, slider.min, slider.max);
 
-            ImGui::EndCombo();
-        }
+        item.value = std::clamp(item.value, slider.min, slider.max);
+    }
+    else
+    {
+        static_assert(false, "Unsupported slider type");
     }
 
     ImGui::OpenPopupOnItemClick(bindItemPopup.c_str(), ImGuiPopupFlags_MouseButtonRight);
@@ -114,7 +96,7 @@ inline void render(MultiComboBox& multiComboBox)
 
                 if (ImGui::SmallButton(bindAdd.c_str()))
                 {
-                    multiComboBoxBindCallback(multiComboBox);
+                    bindCallback<T>(slider);
 
                     preview.selection = 0;
                     preview.selectedBind.reset();
@@ -147,7 +129,7 @@ inline void render(MultiComboBox& multiComboBox)
 
                     if (ImGui::SmallButton(bindPlus.c_str()))
                     {
-                        multiComboBoxBindCallback(multiComboBox);
+                        bindCallback<T>(slider);
                         preview.selectedBind.reset();
                         preview.selection = bindsIter;
                         continue;
@@ -175,6 +157,7 @@ inline void render(MultiComboBox& multiComboBox)
         if (preview.selectedBind.has_value())
         {
             auto& value = preview.selectedBind.value();
+
             std::string valueName = "Value ##" + value->name;
             std::string bindType = "##bind-type-to" + value->name;
 
@@ -188,30 +171,31 @@ inline void render(MultiComboBox& multiComboBox)
 
                 ImGui::Text("Current Key");
                 ImGui::SameLine();
-                keybind::keyBindSelector<std::list<BindValues<unsigned int>>>(currentBind, value);
+                keybind::keyBindSelector<std::list<BindValues<T>>>(currentBind, value);
             }
 
             value->previewName = getPreviewItemName(*value);
 
             {
-                auto comboSize = static_cast<int>(item.itemsList.size());
-
-                std::string preview = getActiveItems(value->value, item.itemsList);
-                if (ImGui::BeginCombo(valueName.c_str(), preview.c_str()))
+                if constexpr (std::is_same<T, float>::value)
                 {
-                    for (int i = 0; i < comboSize; ++i)
-                    {
-                        const auto step = 1 << i;
-                        if (ImGui::Selectable(item.itemsList[i].c_str(), (value->value & step), ImGuiSelectableFlags_DontClosePopups))
-                        {
-                            if ((value->value & step))
-                                value->value &= ~step;
-                            else
-                                value->value |= step;
-                        }
-                    }
+                    std::string hiddenName = "##slider-float-for-" + valueName;
+                    ImGui::Text(getFormattedText(valueName).c_str());
+                    ImGui::SliderFloat(hiddenName.c_str(), &value->value, slider.min, slider.max);
 
-                    ImGui::EndCombo();
+                    value->value = std::clamp(value->value, slider.min, slider.max);
+                }
+                else if constexpr (std::is_same<T, int>::value)
+                {
+                    std::string hiddenName = "##slider-int-for-" + valueName;
+                    ImGui::Text(getFormattedText(valueName).c_str());
+                    ImGui::SliderInt(hiddenName.c_str(), &value->value, slider.min, slider.max);
+
+                    value->value = std::clamp(value->value, slider.min, slider.max);
+                }
+                else
+                {
+                    static_assert(false, "Unsupported slider type");
                 }
             }
         }

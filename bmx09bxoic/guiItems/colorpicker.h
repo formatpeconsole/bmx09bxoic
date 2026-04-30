@@ -12,13 +12,15 @@
 #include "keybind.h"
 #include "utils.h"
 
-namespace gui::items::checkbox
+namespace gui::items::colorpicker
 {
-inline void addCheckBoxBind(CheckBox& checkbox)
+using namespace gui;
+
+inline void addColorPickerBind(ColorPicker& colorPicker)
 {
-    auto& item = checkbox.item;
+    auto& item = colorPicker.item;
     auto& newBind = item.binds.emplace_back();
-    newBind.name = "CheckBox-For " + item.name + " " + uuid::getUuid();
+    newBind.name = "ColorPickerBind-For " + item.name + " " + uuid::getUuid();
 
     getMenuInstance().keyBindManager.addBind(
         &item.value,
@@ -28,27 +30,36 @@ inline void addCheckBoxBind(CheckBox& checkbox)
         item.itemType,
         0,
         newBind.name,
-        checkbox.item.name
+        colorPicker.item.name
     );
 }
 
-inline decltype(&addCheckBoxBind) checkBoxBindCallback = addCheckBoxBind;
+inline decltype(&addColorPickerBind) colorPickerBindCallback = addColorPickerBind;
 
-inline void render(CheckBox& checkbox)
+inline void render(ColorPicker& colorPicker)
 {
-    auto& item = checkbox.item;
+    auto& item = colorPicker.item;
 
     std::string itemKey = std::to_string(reinterpret_cast<uintptr_t>(&item));
     std::string itemValueKey = std::to_string(reinterpret_cast<uintptr_t>(&item.value));
 
-    std::string bindItemPopup = "bind-popup-checkbox##" + itemKey;
+    std::string bindItemPopup = "bind-popup-comboBox##" + itemKey;
     std::string bindCombo = "##binds-for-" + itemValueKey;
 
     std::string bindAdd = "+##bind-add-for-" + itemKey;
 
     std::string bindOpenPopup = "+##" + itemKey;
 
-    ImGui::Checkbox(item.name.c_str(), &item.value);
+    {
+        std::string hiddenName = "##color-picker-for-" + item.name;
+        ImGui::Text(getFormattedText(item.name).c_str());
+        ImGui::SameLine();
+
+        ImVec4 col = ImGui::ColorConvertU32ToFloat4(item.value);
+        if (ImGui::ColorEdit4(hiddenName.c_str(), (float*)&col, ImGuiColorEditFlags_NoInputs))
+            item.value = ImGui::ColorConvertFloat4ToU32(col);
+    }
+
     ImGui::OpenPopupOnItemClick(bindItemPopup.c_str(), ImGuiPopupFlags_MouseButtonRight);
 
     if (ImGui::BeginPopup(bindItemPopup.c_str()))
@@ -73,7 +84,7 @@ inline void render(CheckBox& checkbox)
 
                 if (ImGui::SmallButton(bindAdd.c_str()))
                 {
-                    checkBoxBindCallback(checkbox);
+                    colorPickerBindCallback(colorPicker);
 
                     preview.selection = 0;
                     preview.selectedBind.reset();
@@ -106,7 +117,7 @@ inline void render(CheckBox& checkbox)
 
                     if (ImGui::SmallButton(bindPlus.c_str()))
                     {
-                        checkBoxBindCallback(checkbox);
+                        colorPickerBindCallback(colorPicker);
                         preview.selectedBind.reset();
                         preview.selection = bindsIter;
                         continue;
@@ -147,11 +158,19 @@ inline void render(CheckBox& checkbox)
 
                 ImGui::Text("Current Key");
                 ImGui::SameLine();
-                keybind::keyBindSelector<std::list<BindValues<bool>>>(currentBind, value);
+                keybind::keyBindSelector<std::list<BindValues<unsigned int>>>(currentBind, value);
             }
 
             value->previewName = getPreviewItemName(*value);
-            ImGui::Checkbox(valueName.c_str(), &value->value);
+            {
+                std::string hiddenName = "##color-picker-for-" + valueName;
+                ImGui::Text(getFormattedText(valueName).c_str());
+                ImGui::SameLine();
+
+                ImVec4 col = ImGui::ColorConvertU32ToFloat4(value->value);
+                if (ImGui::ColorEdit4(hiddenName.c_str(), (float*)&col, ImGuiColorEditFlags_NoInputs))
+                    value->value = ImGui::ColorConvertFloat4ToU32(col);
+            }
         }
 
         ImGui::EndPopup();
