@@ -7,8 +7,25 @@
 #include "../deps/imguiFramework/imgui_impl_dx11.h"
 #include "../deps/imguiFramework/imgui_impl_win32.h"
 
+enum FONTS
+{
+    FONT_LOGO = 0,
+    FONT_ITEMS,
+    FONT_WATERMARK,
+    FONT_INFO,
+    FONT_MAX
+};
+
+struct Font
+{
+    ImFont* font = nullptr;
+    float size = 0.f;
+};
+
 struct RenderInfo
 {
+    Font fonts[FONT_MAX]{};
+
     ID3D11Device* device = nullptr;
     ID3D11DeviceContext* deviceContext = nullptr;
     ID3D11RenderTargetView* renderTargetView = nullptr;
@@ -22,6 +39,10 @@ struct RenderInfo
 
 namespace render
 {
+extern Font& getFont(int type);
+extern void pushFont(int type);
+extern void popFont();
+
 extern void init(IDXGISwapChain* pSwapChain);
 extern void destroy();
 extern void clearRenderTargetView();

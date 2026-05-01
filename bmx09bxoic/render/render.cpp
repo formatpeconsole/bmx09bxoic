@@ -2,10 +2,37 @@
 
 #include "../hooks/hooks.h"
 #include "../gui/gui.h"
+#include "../gui/framework/window.h"
+
+#include "fonts/iosevkaCharon.h"
 
 namespace render
 {
 using namespace gui;
+using namespace gui::framework;
+
+Font& getFont(int type)
+{
+    return getRenderInfoInstance().fonts[type];
+}
+
+Font makeFont(ImFontAtlas* atlas, ImFontConfig& config, const unsigned char* data, const unsigned int size, float size_pixels)
+{
+    Font output{};
+    output.font = atlas->AddFontFromMemoryCompressedTTF(data, size, size_pixels, &config);
+    output.size = size_pixels;
+    return output;
+}
+
+void pushFont(int type)
+{
+    ImGui::PushFont(getFont(type).font);
+}
+
+void popFont()
+{
+    ImGui::PopFont();
+}
 
 void init(IDXGISwapChain* pSwapChain)
 {
@@ -83,7 +110,11 @@ void init(IDXGISwapChain* pSwapChain)
     ImFontConfig config{};
     config.OversampleH = 3;
     config.OversampleV = 3;
-    io.Fonts->AddFontFromFileTTF("c:/windows/fonts/arial.ttf", 15.f);
+
+    getRenderInfoInstance().fonts[FONT_LOGO] = makeFont(io.Fonts, config, CheatFont_compressed_data, CheatFont_compressed_size, 26.f * DPI_SCALE);
+    getRenderInfoInstance().fonts[FONT_ITEMS] = makeFont(io.Fonts, config, CheatFont_compressed_data, CheatFont_compressed_size, 20.f * DPI_SCALE);
+    getRenderInfoInstance().fonts[FONT_WATERMARK] = makeFont(io.Fonts, config, CheatFont_compressed_data, CheatFont_compressed_size, 20.f * DPI_SCALE);
+    getRenderInfoInstance().fonts[FONT_INFO] = makeFont(io.Fonts, config, CheatFont_compressed_data, CheatFont_compressed_size, 20.f * DPI_SCALE);
 
     ImGui_ImplWin32_Init(getRenderInfoInstance().cs2Window);
     ImGui_ImplDX11_Init(getRenderInfoInstance().device, getRenderInfoInstance().deviceContext);
@@ -130,6 +161,8 @@ void onResize()
 
 void onRender(IDXGISwapChain* pSwapChain)
 {
+    gui::updateDpiScale();
+
     if (!getRenderInfoInstance().init)
         init(pSwapChain);
     else

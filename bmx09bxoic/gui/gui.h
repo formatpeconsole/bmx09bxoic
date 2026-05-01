@@ -132,11 +132,25 @@ struct RageTab
 };
 
 using itemsInMemoryList = std::vector<std::pair<void*, int>>;
+
+using windowNamePos = std::pair<std::string, ImVec2>;
+using windowNamePosValue = std::optional<windowNamePos>;
+using lastPositionsList = std::list<windowNamePosValue>;
+
 struct Menu
 {
     ItemOldValue<bool> openedOldValue{};
     bool opened = false;
     bool newOpened = true;
+
+    lastPositionsList lastPositions{};
+
+    MAKE_COMBO(dpiScale, "DPI Scale##ui", 0, COMBO_LIST(
+        "100%",
+        "125%",
+        "150%",
+        "200%"
+    ));
 
     RageTab rage;
     itemsInMemoryList itemsInMemory{};
@@ -146,6 +160,7 @@ struct Menu
 };
 
 extern void init();
+extern void updateDpiScale();
 extern void destroy();
 
 extern void renderBindsDebugWindow();

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include "gui.h"
+#include "framework/window.h"
 
 #include "../main/dllInstance.h"
 
@@ -9,6 +10,14 @@
 
 namespace gui
 {
+enum DPI_SCALE_AMOUNT
+{
+    DPI_100 = 0,
+    DPI_125,
+    DPI_150,
+    DPI_200
+};
+
 void init()
 {
     getMenuInstance().initConfig();
@@ -127,9 +136,69 @@ std::string getBindValueFromString(const std::string& value, void* ptr, int item
     }
 }
 
+void saveUiPos(const std::string& name)
+{
+    auto window = ImGui::FindWindowByName(name.c_str());
+    if (window != nullptr)
+        getMenuInstance().lastPositions.emplace_back(std::make_pair(name, window->Pos));
+}
+
+void correctSavedUIPos(const std::string& name)
+{
+    auto existingUI = std::find_if(getMenuInstance().lastPositions.begin(), getMenuInstance().lastPositions.end(),
+        [name](const windowNamePosValue& item)
+        {
+            return item.has_value() && item->first == name;
+        });
+
+    if (existingUI != getMenuInstance().lastPositions.end())
+    {
+        ImGui::SetNextWindowPos(existingUI->value().second);
+        getMenuInstance().lastPositions.erase(existingUI);
+    }
+}
+
+void updateDpiScale()
+{
+    static float prevDpi = 1.f;
+
+    switch (getMenuInstance().dpiScale.item.value)
+    {
+    case DPI_100:
+        framework::DPI_SCALE = 1.f;
+        break;
+    case DPI_125:
+        framework::DPI_SCALE = 1.25f;
+        break;
+    case DPI_150:
+        framework::DPI_SCALE = 1.5f;
+        break;
+    case DPI_200:
+        framework::DPI_SCALE = 2.f;
+        break;
+    }
+
+    if (prevDpi != framework::DPI_SCALE)
+    {
+        std::string mainWindowName = "BMX09BXOIC - MAIN";
+        std::string bindWindowName = "BIND LIST";
+
+        saveUiPos(mainWindowName);
+        saveUiPos(bindWindowName);
+
+        render::getRenderInfoInstance().init = false;
+        render::destroy();
+        render::clearRenderTargetView();
+        prevDpi = framework::DPI_SCALE;
+    }
+}
+
 void renderBindsDebugWindow()
 {
-    ImGui::Begin("BIND LIST", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
+    std::string windowTitle = "BIND LIST";
+    correctSavedUIPos(windowTitle);
+
+    ImGui::Begin(windowTitle.c_str(), nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize);
     {
         auto& binds = getMenuInstance().keyBindManager.getBindList();
         auto& itemsInMemory = getMenuInstance().itemsInMemory;
@@ -185,9 +254,9 @@ int tabSelection = 0;
 std::vector<std::string> tabs = { "Rage", "Legit", "Visuals", "Misc", "Skins", "Configs", "LUA" };
 
 // TO-DO:
-// subtabs
-// MAIN (with weapon config)
-// ANTI-AIM (stand/move/air/crouch/slowwalk)
+// subtabs (made as child) +
+// MAIN (with weapon config) + 
+// ANTI-AIM (stand/move/air/crouch/slowwalk) +
 void renderSubTabs(const std::vector<std::string>& tabs, int& selection) 
 {
     ImGui::BeginGroup();
@@ -317,6 +386,8 @@ void renderConfigsTab()
 {
     ImGui::BeginGroup();
     {
+        combobox::render(getMenuInstance().dpiScale);
+
         if (ImGui::SmallButton("Save"))
             config::saveConfig();
         ImGui::SameLine();
@@ -338,22 +409,27 @@ void renderLUATab()
 // TO-DO: different layout that allows to handle multiple sections at the same time
 // for example:
 // RAGE MAIN:
-// [ Main child with enable / exploits ]
-// [ Weapon config ]
+// [ Main child with enable / exploits ] + 
+// [ Weapon config ] + 
 // ANTI AIM MAIN:
-// [ Main Child with pitch yaw (offset) jitter (offset) at target ]
-// [ Misc Child with freestanding edge ]
+// [ Main Child with pitch yaw (offset) jitter (offset) at target ] +
+// [ Misc Child with freestanding edge ] +
 void renderMainUI()
 {
     if (getMenuInstance().opened)
     {
+        std::string windowTitle = "BMX09BXOIC - MAIN";
+        correctSavedUIPos(windowTitle);
+
         ImGui::SetNextWindowSize(ImVec2(780, 650));
 
-        std::string windowTitle = "BMX09BXOIC - " + std::string(__DATE__);
+        render::pushFont(FONT_LOGO);
         ImGui::Begin(windowTitle.c_str(), &getMenuInstance().opened, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+        render::popFont();
+
         {
             using namespace gui::items;
-
+            render::pushFont(FONT_ITEMS);
             ImGui::BeginGroup();
             for (int i = 0; i < tabs.size(); ++i)
             {
@@ -394,6 +470,7 @@ void renderMainUI()
                 }
             }
             ImGui::EndGroup();
+            render::popFont();
         }
         ImGui::End();
     }
