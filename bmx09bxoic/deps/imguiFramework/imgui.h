@@ -78,6 +78,7 @@ Index of this file:
 #include <stdarg.h>                 // va_list, va_start, va_end
 #include <stddef.h>                 // ptrdiff_t, NULL
 #include <string.h>                 // memset, memmove, memcpy, strlen, strchr, strcpy, strcmp
+#include <memory>
 
 // Define attributes of all API symbols declarations (e.g. for DLL under Windows)
 // IMGUI_API is used for core imgui functions, IMGUI_IMPL_API is used for the default backends files (imgui_impl_xxx.h)
@@ -309,6 +310,38 @@ struct ImVec4
 {
     float                                                     x, y, z, w;
     constexpr ImVec4()                                        : x(0.0f), y(0.0f), z(0.0f), w(0.0f) { }
+
+    ImVec4(const ImVec4& other) noexcept
+        : x(other.x), y(other.y), z(other.z), w(other.w) {}
+
+    ImVec4(ImVec4&& other) noexcept
+    {
+        if (this != &other)
+        {
+            x = other.x; y = other.y; z = other.z; w = other.w;
+            other.x = other.y = other.z = other.w = 0.f;
+        }
+    }
+
+    ImVec4& operator=(const ImVec4& other) noexcept
+    {
+        if (this != &other)
+        {
+            x = other.x; y = other.y; z = other.z; w = other.w;
+        }
+        return *this;
+    }
+
+    ImVec4& operator=(ImVec4&& other) noexcept
+    {
+        if (this != &other) 
+        {
+            x = other.x; y = other.y; z = other.z; w = other.w;
+            other.x = other.y = other.z = other.w = 0.f;
+        }
+        return *this;
+    }
+
     constexpr ImVec4(float _x, float _y, float _z, float _w)  : x(_x), y(_y), z(_z), w(_w) { }
 #ifdef IM_VEC4_CLASS_EXTRA
     IM_VEC4_CLASS_EXTRA     // Define additional constructors and implicit cast operators in imconfig.h to convert back and forth between your math types and ImVec4.
@@ -2969,9 +3002,52 @@ struct ImColor
 {
     ImVec4          Value;
 
-    constexpr ImColor()                                             { }
+    constexpr ImColor() { }
+
+    ImColor(const ImColor& other) noexcept : Value(other.Value) {}
+
+    ImColor(ImColor&& other) noexcept
+        : Value(other.Value)
+    {
+        other.Value = ImVec4{};
+    }
+
+    ImColor& operator=(const ImColor& other) noexcept
+    {
+        Value = other.Value;
+        return *this;
+    }
+
+    ImColor& operator=(ImColor&& other) noexcept
+    {
+        Value = std::move(other.Value);
+        return *this;
+    }
+
+    ImColor(const ImVec4& other)
+    {
+        Value = other;
+    }
+
+    ImColor(ImVec4&& other)
+        : Value(other)
+    {
+        other = ImVec4{};
+    }
+
+    ImColor& operator=(const ImVec4& other) noexcept
+    {
+        Value = other;
+        return *this;
+    }
+
+    ImColor& operator=(ImVec4&& other) noexcept
+    {
+        Value = std::move(other);
+        return *this;
+    }
+
     constexpr ImColor(float r, float g, float b, float a = 1.0f)    : Value(r, g, b, a) { }
-    constexpr ImColor(const ImVec4& col)                            : Value(col) {}
     constexpr ImColor(int r, int g, int b, int a = 255)             : Value((float)r * (1.0f / 255.0f), (float)g * (1.0f / 255.0f), (float)b * (1.0f / 255.0f), (float)a* (1.0f / 255.0f)) {}
     constexpr ImColor(ImU32 rgba)                                   : Value((float)((rgba >> IM_COL32_R_SHIFT) & 0xFF) * (1.0f / 255.0f), (float)((rgba >> IM_COL32_G_SHIFT) & 0xFF) * (1.0f / 255.0f), (float)((rgba >> IM_COL32_B_SHIFT) & 0xFF) * (1.0f / 255.0f), (float)((rgba >> IM_COL32_A_SHIFT) & 0xFF) * (1.0f / 255.0f)) {}
     inline operator ImU32() const                                   { return ImGui::ColorConvertFloat4ToU32(Value); }

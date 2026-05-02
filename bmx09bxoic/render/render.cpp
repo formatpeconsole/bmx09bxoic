@@ -131,7 +131,7 @@ void init(IDXGISwapChain* pSwapChain)
     RECT clientRect{};
     GetClientRect(getRenderInfoInstance().cs2Window, &clientRect);
 
-    getRenderInfoInstance().screenSize = ImVec2(clientRect.right, clientRect.bottom);
+    getRenderInfoInstance().screenSize = ImVec2(static_cast<float>(clientRect.right), static_cast<float>(clientRect.bottom));
     getRenderInfoInstance().init = true;
 }
 
@@ -225,7 +225,7 @@ ImDrawList* getDrawList()
     return ImGui::GetBackgroundDrawList();
 }
 
-void renderText(Font& font, ImVec2 pos, ImColor color, const char* string)
+void renderText(Font& font, ImVec2 pos, ImColor&& color, const char* string)
 {
     auto drawList = getDrawList();
     drawList->PushTextureID(font.font->OwnerAtlas->TexID);

@@ -14,12 +14,20 @@ enum UI_TABS
     TAB_LUA
 };
 
+struct tabAnimation
+{
+    ImVec4 radioButton{};
+    ImVec4 text{};
+};
+
 using tabsList = std::vector<std::string>;
+using tabAnimationsList = std::vector<tabAnimation>;
+
 class MainWindow : public IWindow
 {
 public:
-    MainWindow(tabsList tabs, std::string name, ImVec2 size)
-        : tabs(tabs), name(name), size(size), tabSelection(0), prevDpiScale(1.f), windowAlpha(0.f) {}
+    MainWindow(tabsList tabs, std::string name, ImVec2 size);
+    ~MainWindow();
 
     void init() override;
     void render() override;
@@ -40,6 +48,7 @@ private:
     int getMainAlpha();
 
     std::unordered_map<void*, std::pair<void*, int>> items{};
+    tabAnimationsList tabsAnimations{};
     tabsList tabs{};
 
     std::string name{};

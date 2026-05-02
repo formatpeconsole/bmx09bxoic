@@ -163,6 +163,61 @@ void renderLUATab()
 {
 }
 
+bool tabButton(const char* name, ImVec2 sizeArg, bool active, tabAnimation& animation, int mainAlpha)
+{
+    ImGuiWindow* window = ImGui::GetCurrentWindow();
+    ImGuiContext& g = *GImGui;
+    const ImGuiStyle& style = g.Style;
+    const ImGuiID id = window->GetID(name);
+    const ImVec2 label_size = ImGui::CalcTextSize(name, NULL, true);
+
+    ImVec2 pos = window->DC.CursorPos;
+    ImVec2 size = ImGui::CalcItemSize(sizeArg, label_size.x + style.FramePadding.x * 2.0f, label_size.y + style.FramePadding.y * 2.0f);
+
+    const ImRect bb(pos, pos + size);
+    ImGui::ItemSize(size, style.FramePadding.y);
+    if (!ImGui::ItemAdd(bb, id))
+        return false;
+
+    bool hovered{}, held{};
+    bool pressed = ImGui::ButtonBehavior(bb, id, &hovered, &held, 0);
+
+    ImColor baseColor{};
+    float colorAdd = (static_cast<float>(hovered) + static_cast<float>(held)) * 0.15f;
+    float mainColor = active ? 1.f : 0.68f + colorAdd;
+    baseColor.Value.x = baseColor.Value.y = baseColor.Value.z = mainColor;
+    baseColor.Value.w = static_cast<float>(mainAlpha) / 255.f;
+
+    ImColor radioButtonColor = active ? MAIN_WINDOW_ACCENT_COLOR : baseColor;
+    radioButtonColor.Value.w = static_cast<float>(mainAlpha) / 255.f;
+
+    animation.radioButton = ImLerp(animation.radioButton, radioButtonColor.Value, 0.1f);
+    animation.text = ImLerp(animation.text, baseColor.Value, 0.1f);
+
+    auto basePos = pos + ImVec2(3.f, 10.f);
+
+    auto drawList = objRender::getDrawList();
+    drawList->AddCircleFilled(basePos, 3.5f, ImColor(animation.radioButton));
+
+    auto textPos = pos + ImVec2(20.f, 0.f);;
+    objRender::renderText(render::getFont(FONT_ITEMS), textPos, ImColor(animation.text), name);
+
+   // drawList->AddRect(pos, pos + size, ImColor(255, 255, 255, 255));
+
+    return pressed;
+}
+
+MainWindow::MainWindow(tabsList tabs, std::string name, ImVec2 size)
+    : tabs(tabs), name(name), size(size), tabSelection(0), prevDpiScale(1.f), windowAlpha(0.f)
+{
+    tabsAnimations.resize(tabs.size());
+}
+
+MainWindow::~MainWindow()
+{
+    tabsAnimations.clear();
+}
+
 int MainWindow::getMainAlpha()
 {
     return static_cast<int>(255.f * windowAlpha);
@@ -185,7 +240,9 @@ std::string MainWindow::getBuildDate()
 void MainWindow::renderLogo()
 {
     auto pos = ImGui::GetWindowPos();
-    objRender::renderText(render::getFont(FONT_LOGO), pos + ImVec2(33.f, 22.f), ImColor(255, 255, 255, getMainAlpha()), name.c_str());
+    ImVec2 logoPos = pos + ImVec2(33.f, 22.f);
+
+    objRender::renderText(render::getFont(FONT_LOGO), logoPos, ImColor(255, 255, 255, getMainAlpha()), name.c_str());
 }
 
 void MainWindow::renderBottomInfo()
@@ -200,15 +257,20 @@ void MainWindow::renderBottomInfo()
 
 void MainWindow::renderTabs()
 {
-    ImGui::SetCursorPos(ImVec2(33.f, 82.f));
+    ImGui::SetCursorPos(ImVec2(34.f, 84.f));
     ImGui::BeginGroup();
     {
         ImGui::PushFont(render::getFont(FONT_ITEMS).font);
+
+        int mainAlpha = getMainAlpha();
         for (int i = 0; i < tabs.size(); ++i)
         {
-            if (ImGui::RadioButton(tabs[i].c_str(), i == tabSelection))
+            float buttonXSize = static_cast<float>(tabs[i].length() * 11) * DPI_SCALE;
+
+            if (tabButton(tabs[i].c_str(), ImVec2(buttonXSize, 20.f * DPI_SCALE), i == tabSelection, tabsAnimations[i], mainAlpha))
                 tabSelection = i;
-            ImGui::Spacing();
+            
+            ImGui::Dummy({0.f, 12.f * DPI_SCALE});
         }
         ImGui::PopFont();
     }
