@@ -349,22 +349,71 @@ void MainWindow::renderTabs()
 
 void MainWindow::renderTabsContents()
 {
+    // animate child contents 
+    // depends on which tab have subtabs
     auto& selectedTab = tabs[tabSelection];
 
-    float yPos = selectedTab.haveSubTabs ? 56.f : 23.f;
-    float ySize = selectedTab.haveSubTabs ? 444.f : 477.f;
+    float yBasePos = selectedTab.haveSubTabs ? 56.f : 23.f;
+    float yBaseSize = selectedTab.haveSubTabs ? 444.f : 477.f;
 
     if (tabContentsAnim.yPos == 0.f)
-        tabContentsAnim.yPos = yPos;
+        tabContentsAnim.yPos = yBasePos;
     else
-        tabContentsAnim.yPos = std::lerp(tabContentsAnim.yPos, yPos, 0.1f);
+        tabContentsAnim.yPos = std::lerp(tabContentsAnim.yPos, yBasePos, 0.1f);
 
     if (tabContentsAnim.ySize == 0.f)
-        tabContentsAnim.ySize = ySize;
+        tabContentsAnim.ySize = yBaseSize;
     else
-        tabContentsAnim.ySize = std::lerp(tabContentsAnim.ySize, ySize, 0.1f);
+        tabContentsAnim.ySize = std::lerp(tabContentsAnim.ySize, yBaseSize, 0.1f);
 
-    mainPos.baseTabsContents.y = tabContentsAnim.yPos;
+    mainPos.baseTabsContents.y = static_cast<float>(static_cast<int>(tabContentsAnim.yPos));
+
+    float deltaTime = math::roundFloat(ImGui::GetIO().DeltaTime * 15.f, 2) + 0.005f;
+    if (selectedTab.haveSubTabs)
+    {
+        if (subTabAnimation < 1.f)
+            subTabAnimation += deltaTime;
+    }
+    else
+    {
+        if (subTabAnimation > 0.f)
+            subTabAnimation -= deltaTime;
+    }
+
+    subTabAnimation = std::clamp(subTabAnimation, 0.0f, 1.0f);
+
+    auto subTabsCursorPos = mainPos.baseSubTabsContents * DPI_SCALE;
+    ImGui::SetCursorPos(subTabsCursorPos);
+    ImGui::BeginGroup();
+    {
+        ImGui::PushFont(render::getFont(FONT_ITEMS).font);
+
+        int mainAlpha = static_cast<int>(windowAlpha * subTabAnimation * 255.f);
+
+        float buttonYSize = 20.f * DPI_SCALE;
+        float buttonXSpacing = 29.f * DPI_SCALE;
+
+        const auto size = selectedTab.subTabs.size();
+
+        float basicSpacing = 0.f;
+        for (size_t i = 0; i < size; ++i)
+        {
+            auto tabName = selectedTab.subTabs[i].name;
+            float buttonXSize = static_cast<float>(tabName.length() * 11) * DPI_SCALE;
+            if (tabButton(tabName.c_str(),
+                ImVec2(buttonXSize, buttonYSize),
+                i == selectedTab.subTabSelection,
+                selectedTab.subTabAnimations[i],
+                mainAlpha))
+                selectedTab.subTabSelection = i;
+
+            basicSpacing += (buttonXSize + buttonXSpacing);
+            ImGui::SameLine(basicSpacing);
+        }
+
+        ImGui::PopFont();
+    }
+    ImGui::EndGroup();
 
     auto cursorPos = mainPos.baseTabsContents * DPI_SCALE;
     ImGui::SetCursorPos(cursorPos);

@@ -21,6 +21,7 @@ struct tabAnimation
 
     float radioGlowAlpha{};
 };
+using tabAnimationsList = std::vector<tabAnimation>;
 
 struct tabSelectionAnimation
 {
@@ -37,7 +38,8 @@ struct tabSelectionAnimation
 struct mainPositions
 {
     ImVec2 baseTabs{ 34.f, 84.f };
-    ImVec2 baseTabsContents{ 205.f, 56.f };
+    ImVec2 baseTabsContents{ 205.f, 0.f };
+    ImVec2 baseSubTabsContents{ 220.f, 25.f };
     ImVec2 logo{ 33.f, 22.f };
 };
 
@@ -50,21 +52,30 @@ struct tabContentsAnimation
 struct subTab
 {
     std::string name{};
-    int selection{};
-
-    subTab(std::string name) : name(name), selection(0) {}
+    subTab(std::string name) : name(name) {}
 };
 
 struct tabItself
 {
+    tabAnimationsList subTabAnimations{};
     std::vector<subTab> subTabs{};
     std::string name{};
+    int subTabSelection{};
     bool haveSubTabs = false;
+
+    tabItself(std::vector<subTab> subTabs, std::string name, bool haveSubTabs) :
+        subTabs(subTabs), name(name), subTabSelection(0), haveSubTabs(haveSubTabs)
+    {
+        subTabAnimations.resize(subTabs.size());
+    }
+
+    ~tabItself()
+    {
+        subTabAnimations.clear();
+    }
 };
 
 using tabsList = std::vector<tabItself>;
-using tabAnimationsList = std::vector<tabAnimation>;
-
 class MainWindow : public IWindow
 {
 public:
@@ -98,6 +109,7 @@ private:
     mainPositions mainPos;
     tabContentsAnimation tabContentsAnim{};
     int tabSelection{};
+    float subTabAnimation{};
 
     std::string name{};
     ImVec2 pos{};
