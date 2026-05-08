@@ -49,7 +49,7 @@ float getAnimatedProgress(AnimationWay way, float t)
 }
 
 Animation::Animation(float start, float end, float duration, AnimationWay way)
-    : start(start), end(end), begin(start), animatedValue(start), duration(duration), animationWay(way) {}
+    : start(start), end(end), begin(0.f), animatedValue(0.f), duration(duration), animationWay(way) {}
 
 void Animation::setCondition(bool triggerCondition)
 {
@@ -74,6 +74,11 @@ void Animation::process()
         std::chrono::duration<float> elapsed = now - timeOnTrigger;
         animationProgress = elapsed.count() / duration;
         animationProgress = std::clamp(animationProgress, 0.f, 1.f);
+
+        if (animatedValue == 0.f && begin == 0.f)
+        {
+            animatedValue = begin = condition ? end : start;
+        }
 
         float progress = getAnimatedProgress(animationWay, animationProgress);
         animatedValue = std::lerp(begin, condition ? end : start, progress);
