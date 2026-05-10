@@ -15,6 +15,12 @@ enum UI_TABS
     TAB_LUA
 };
 
+enum CHILD_ANIMATION
+{
+    CHILD_SECOND = 0,
+    CHILD_THIRD,
+};
+
 struct tabAnimation
 {
     ImVec4 radioButton{ 0.0f, 0.0f, 0.0f, 0.0f };
@@ -49,16 +55,29 @@ struct tabContentsAnimation
 {
     float yPos{};
     float ySize{};
+    float xChildSize{};
+    float yChildSize{};
+    float ySubChildFactor{};
+    float subChildsAlpha[2]{};
 
-    render::Animation yPosAnimation{ 56.f, 23.f, 0.45f, render::ANIMATION_EASE_OUT_EXPO };
-    render::Animation ySizeAnimation{ 444.f, 477.f, 0.45f, render::ANIMATION_EASE_OUT_EXPO };
-    render::Animation selectedTabAnimation{ 0.f, 100.f, 0.45f, render::ANIMATION_EASE_OUT_EXPO, render::ANIMATION_FLAGS_REPLAY_FROM_START };
+    render::Animation yPosAnimation{ 57.f, 24.f, 0.35f, render::ANIMATION_EASE_OUT_EXPO };
+    render::Animation ySizeAnimation{ 444.f, 477.f, 0.35f, render::ANIMATION_EASE_OUT_EXPO };
+    render::Animation xChildSizeAnimation{ 219.f, 451.f, 0.3f, render::ANIMATION_EASE_OUT_EXPO };
+    render::Animation yChildSizeAnimation{ 410.f, 443.f, 0.35f, render::ANIMATION_EASE_OUT_EXPO };
+    render::Animation selectedTabAnimation{ 0.f, 100.f, 0.35f, render::ANIMATION_EASE_OUT_EXPO, render::ANIMATION_FLAGS_REPLAY_FROM_START };
+    render::Animation ySubChildFactorAnimation{ 100.f, 50.f, 0.35f, render::ANIMATION_EASE_OUT_EXPO };
+    render::Animation subChildsAlphaAnimation[2]{
+        { 100.f, 0.f, 0.35f, render::ANIMATION_EASE_OUT_QUAD },
+        { 100.f, 0.f, 0.35f, render::ANIMATION_EASE_OUT_QUAD },
+    };
 };
 
 struct subTab
 {
     std::string name{};
-    subTab(std::string name) : name(name) {}
+    int childCount{};
+
+    subTab(std::string name, int childCount) : name(name), childCount(childCount) {}
 };
 
 struct tabItself

@@ -153,12 +153,12 @@ void Menu::initWindows()
     using namespace framework;
     windows.emplace_back(std::make_shared<BindsWindow>("BIND LIST", BINDS_WINDOW_SIZE));
     windows.emplace_back(std::make_shared<MainWindow>(tabsList{
-        tabItself{{ subTab{"Aimbot"}, subTab{"Anti-Aim"} }, "Ragebot", false},
+        tabItself{{ subTab{"Aimbot", 2}, subTab{"Anti-Aim", 3} }, "Ragebot", false},
         tabItself{{}, "Legitbot", true},
-        tabItself{{ subTab{"Enemy"}, subTab{"Team"}, subTab{"Local"}, subTab{"World"}, subTab{"Grenades"} }, "Visuals", false},
+        tabItself{{ subTab{"Enemy", 2}, subTab{"Team", 2}, subTab{"Local", 2}, subTab{"World", 3}, subTab{"Grenades", 1} }, "Visuals", false},
         tabItself{{}, "Miscellaneous", true},
-        tabItself{{ subTab{"Weapons"}, subTab{"Gloves"}, subTab{"Agents"} }, "Skin-changer", false},
-        tabItself{{}, "Configs", true},
+        tabItself{{ subTab{"Weapons", 1}, subTab{"Gloves", 1}, subTab{"Agents", 2} }, "Skin-changer", false},
+        tabItself{{}, "Configurations", true},
         tabItself{{}, "LUA-scripts" , true},
     }, "BMX09BXOIC", MAIN_WINDOW_SIZE));
 

@@ -93,7 +93,7 @@ void Hooked_FrameStageNotify(void* clientPtr, int frameStage)
 
     switch (frameStage)
     {
-    case defines::FRAME_RENDER_START:
+    case defines::FRAME_RENDER_END:
         getClockInstance().updateTime();
         break;
     }

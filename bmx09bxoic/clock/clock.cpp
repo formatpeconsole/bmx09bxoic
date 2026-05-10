@@ -2,14 +2,12 @@
 
 void ClockInstance::updateTime()
 {
-    const std::unique_lock<std::mutex> lock(mtx);
-    now = std::chrono::high_resolution_clock::now();
+    now.store(std::chrono::high_resolution_clock::now(), std::memory_order_release);
 }
 
 std::chrono::steady_clock::time_point ClockInstance::getTime()
 {
-    const std::unique_lock<std::mutex> lock(mtx);
-    return now;
+    return now.load(std::memory_order_acquire);
 }
 
 ClockInstance& getClockInstance()

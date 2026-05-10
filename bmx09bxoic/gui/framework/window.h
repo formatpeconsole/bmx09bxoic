@@ -16,7 +16,7 @@ namespace gui::framework
 {
 inline const auto MAIN_WINDOW_SIZE = ImVec2(713.f, 524.f);
 inline const auto BINDS_WINDOW_SIZE = ImVec2(230.f, 75.f);
-inline const auto MAIN_WINDOW_ACCENT_COLOR = ImColor(181, 235, 255, 255);
+inline const auto MAIN_WINDOW_ACCENT_COLOR = ImColor(255, 255, 255, 255);
 inline auto DPI_SCALE = 1.f;
 
 class IWindow
