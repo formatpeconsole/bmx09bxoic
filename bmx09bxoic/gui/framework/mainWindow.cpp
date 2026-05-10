@@ -207,7 +207,7 @@ bool tabButton(const char* name, ImVec2 sizeArg, bool active, tabAnimation& anim
 
         ImColor radioButtonColor = active ? MAIN_WINDOW_ACCENT_COLOR : baseColor;
 
-        animation.radioAnimation.setCondition(active);
+        animation.radioAnimation.setCondition(!active);
         animation.radioAnimation.process();
 
         animation.radioButton = interpolateWithoutAlpha(animation.radioButton, radioButtonColor.Value, 0.1f, uiAlpha);
@@ -220,15 +220,14 @@ bool tabButton(const char* name, ImVec2 sizeArg, bool active, tabAnimation& anim
         if (animation.radioGlowAlpha > 0.0f)
         {
             const int maxRange = 15;
-            float windowAlpha = static_cast<float>(mainAlpha) / 255.f;
             ImColor radioColor = animation.radioButton;
             for (int i = 0; i < maxRange; ++i)
             {
                 float step = (static_cast<float>(i) / static_cast<float>(maxRange - 1));
                 float alphaStep = std::lerp(20.f, 0.f, step);
-                int bgAlpha = static_cast<int>(alphaStep * windowAlpha);
+                int bgAlpha = static_cast<int>(alphaStep * uiAlpha);
 
-                float radius = std::lerp(3.5f, 10.f, step) * animation.radioGlowAlpha * DPI_SCALE;
+                float radius = std::lerp(3.5f, 10.f, step) * DPI_SCALE;
 
                 radioColor.Value.w = (static_cast<float>(bgAlpha) / 255.f) * animation.radioGlowAlpha;
                 drawList->AddCircle(basePos, radius, radioColor);
@@ -374,8 +373,8 @@ void MainWindow::renderTabsContents()
     // depends on which tab have subtabs
     auto& selectedTab = tabs[tabSelection];
 
-    tabContentsAnim.yPosAnimation.setCondition(selectedTab.haveSubTabs);
-    tabContentsAnim.ySizeAnimation.setCondition(selectedTab.haveSubTabs);
+    tabContentsAnim.yPosAnimation.setCondition(selectedTab.noSubTabs);
+    tabContentsAnim.ySizeAnimation.setCondition(selectedTab.noSubTabs);
 
     tabContentsAnim.yPosAnimation.process();
     tabContentsAnim.ySizeAnimation.process();

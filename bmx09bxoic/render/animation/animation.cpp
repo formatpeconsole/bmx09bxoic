@@ -48,7 +48,7 @@ float getAnimatedProgress(AnimationWay way, float t)
     }
 }
 
-Animation::Animation(float start, float end, float duration, AnimationWay way, uintptr_t flags)
+Animation::Animation(float start, float end, float duration, AnimationWay way, uint8_t flags)
     : start(start), end(end), begin(0.f), animatedValue(0.f), animationProgress(1.f),
     duration(duration), animationWay(way), animationFlags(flags) {}
 
@@ -67,24 +67,14 @@ void Animation::process()
         animationProgress = 0.f;
         previousCondition = condition;
 
-        if ((animationFlags & ANIMATION_FLAGS_RESET_TO_START))
+        if ((animationFlags & ANIMATION_FLAGS_REPLAY_FROM_START))
             animatedValue = start;
-        else if ((animationFlags & ANIMATION_FLAGS_RESET_TO_END))
+        else if ((animationFlags & ANIMATION_FLAGS_REPLAY_FROM_END))
             animatedValue = end;
 
         begin = animatedValue;
-  
 
         return;
-    }
-
-    if ((animationFlags & ANIMATION_FLAGS_INIT_ON_START) && !initialized)
-    {
-        if ((animatedValue == 0.f && begin == 0.f))
-        {
-            animatedValue = begin = condition ? end : start;
-            initialized = true;
-        }
     }
 
     std::chrono::duration<float> elapsed = now - timeOnTrigger;

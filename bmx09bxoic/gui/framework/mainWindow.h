@@ -20,7 +20,7 @@ struct tabAnimation
     ImVec4 radioButton{ 0.0f, 0.0f, 0.0f, 0.0f };
     ImVec4 text{ 0.0f, 0.0f, 0.0f, 0.0f };
 
-    render::Animation radioAnimation{ 0.f, 100.f, 0.15f, render::ANIMATION_EASE_OUT_EXPO, render::ANIMATION_FLAGS_INIT_ON_START };
+    render::Animation radioAnimation{ 100.f, 0.f, 0.15f, render::ANIMATION_EASE_OUT_EXPO };
     float radioGlowAlpha{ 0.f };
 };
 using tabAnimationsList = std::vector<tabAnimation>;
@@ -50,9 +50,9 @@ struct tabContentsAnimation
     float yPos{};
     float ySize{};
 
-    render::Animation yPosAnimation{ 23.f, 56.f, 0.45f, render::ANIMATION_EASE_OUT_EXPO, render::ANIMATION_FLAGS_INIT_ON_START };
-    render::Animation ySizeAnimation{ 477.f, 444.f, 0.45f, render::ANIMATION_EASE_OUT_EXPO, render::ANIMATION_FLAGS_INIT_ON_START };
-    render::Animation selectedTabAnimation{ 0.f, 100.f, 0.45f, render::ANIMATION_EASE_OUT_EXPO, render::ANIMATION_FLAGS_INIT_ON_START | render::ANIMATION_FLAGS_RESET_TO_START };
+    render::Animation yPosAnimation{ 56.f, 23.f, 0.45f, render::ANIMATION_EASE_OUT_EXPO };
+    render::Animation ySizeAnimation{ 444.f, 477.f, 0.45f, render::ANIMATION_EASE_OUT_EXPO };
+    render::Animation selectedTabAnimation{ 0.f, 100.f, 0.45f, render::ANIMATION_EASE_OUT_EXPO, render::ANIMATION_FLAGS_REPLAY_FROM_START };
 };
 
 struct subTab
@@ -67,10 +67,10 @@ struct tabItself
     std::vector<subTab> subTabs{};
     std::string name{};
     int subTabSelection{};
-    bool haveSubTabs = false;
+    bool noSubTabs = false;
 
-    tabItself(std::vector<subTab> subTabs, std::string name, bool haveSubTabs) :
-        subTabs(subTabs), name(name), subTabSelection(0), haveSubTabs(haveSubTabs)
+    tabItself(std::vector<subTab> subTabs, std::string name, bool noSubTabs) :
+        subTabs(subTabs), name(name), subTabSelection(0), noSubTabs(noSubTabs)
     {
         subTabAnimations.resize(subTabs.size());
     }
@@ -115,7 +115,7 @@ private:
     mainPositions mainPos;
     tabContentsAnimation tabContentsAnim{};
 
-    render::Animation uiOpenAnimation{ 0.f, 100.f, 0.1f, render::ANIMATION_EASE_OUT_QUAD, render::ANIMATION_FLAGS_NONE };
+    render::Animation uiOpenAnimation{ 0.f, 100.f, 0.1f, render::ANIMATION_EASE_OUT_QUAD };
     int tabSelection{};
     int oldTabSelection{};
 
