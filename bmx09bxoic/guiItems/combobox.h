@@ -40,8 +40,11 @@ inline const char* Items_VectorGetter(void* data, int idx)
     return items[idx].c_str();
 }
 
-inline void render(ComboBox& comboBox)
+inline void render(ComboBox& comboBox, int childType)
 {
+    if (getMenuInstance().getChildType() != childType)
+        return;
+
     auto& item = comboBox.item;
 
     std::string itemKey = std::to_string(reinterpret_cast<uintptr_t>(&item));

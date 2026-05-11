@@ -54,8 +54,11 @@ inline std::string getActiveItems(uint32_t flags, const std::vector<std::string>
     return preview.empty() ? "None" : preview;
 }
 
-inline void render(MultiComboBox& multiComboBox)
+inline void render(MultiComboBox& multiComboBox, int childType)
 {
+    if (getMenuInstance().getChildType() != childType)
+        return;
+
     auto& item = multiComboBox.item;
 
     std::string itemKey = std::to_string(reinterpret_cast<uintptr_t>(&item));

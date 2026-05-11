@@ -29,120 +29,11 @@ void renderSubTabs(const std::vector<std::string>& tabs, int& selection)
     ImGui::Spacing();
 }
 
-void renderRageTab()
-{
-    ImVec2 weaponitemsChildSize = ImVec2(374 * DPI_SCALE, 440 * DPI_SCALE);
-    ImVec2 mainChildSize = ImVec2(weaponitemsChildSize.x, weaponitemsChildSize.y * 0.272f);
-    ImVec2 antiAimChildSize = ImVec2(weaponitemsChildSize.x, weaponitemsChildSize.y * 0.95f);
-    ImVec2 configChildSize = ImVec2(weaponitemsChildSize.x, 60 * DPI_SCALE);
-
-    ImGui::BeginGroup();
-    {
-        ImGui::BeginChild("Main##rage", mainChildSize, ImGuiChildFlags_Borders, ImGuiWindowFlags_NoScrollbar);
-        {
-            checkbox::render(getMenuInstance().rage.enable);
-            checkbox::render(getMenuInstance().rage.autoRevolver);
-            checkbox::render(getMenuInstance().rage.doubleTap);
-            checkbox::render(getMenuInstance().rage.noSpread);
-            checkbox::render(getMenuInstance().rage.duckPeekAssist);
-        }
-        ImGui::EndChild();
-        ImGui::Spacing();
-        ImGui::Spacing();
-        ImGui::BeginChild("Anti Aim##rage", antiAimChildSize, ImGuiChildFlags_Borders, ImGuiWindowFlags_NoScrollbar);
-        {
-            checkbox::render(getMenuInstance().rage.antiAim.enable);
-            checkbox::render(getMenuInstance().rage.antiAim.atTarget);
-            combobox::render(getMenuInstance().rage.antiAim.pitch);
-            combobox::render(getMenuInstance().rage.antiAim.yaw);
-            combobox::render(getMenuInstance().rage.antiAim.jitter);
-            slider::render(getMenuInstance().rage.antiAim.jitterOffset);
-            slider::render(getMenuInstance().rage.antiAim.yawOffset);
-
-            ImGui::BeginGroup();
-            {
-                checkbox::render(getMenuInstance().rage.antiAim.freestanding);
-                ImGui::SameLine();
-
-                if (ImGui::SmallButton("..."))
-                {
-                    ImGui::OpenPopup("freestand-popup");
-                }
-
-                if (ImGui::BeginPopup("freestand-popup"))
-                {
-                    checkbox::render(getMenuInstance().rage.antiAim.zeroOnPeek);
-                    ImGui::EndPopup();
-                }
-            }
-            ImGui::EndGroup();
-        }
-        ImGui::EndChild();
-    }
-    ImGui::EndGroup();
-
-    ImGui::SameLine();
-
-    ImGui::BeginGroup();
-    {
-        ImGui::BeginChild("Weapon Config Selector##rage", configChildSize, ImGuiChildFlags_Borders, ImGuiWindowFlags_NoScrollbar);
-        {
-            ImGui::PushItemWidth(configChildSize.x * 0.958f);
-            combobox::render(getMenuInstance().rage.configSelect);
-            ImGui::PopItemWidth();
-        }
-        ImGui::EndChild();
-        ImGui::Spacing();
-        ImGui::BeginChild("Weapon Config##rage", weaponitemsChildSize, ImGuiChildFlags_Borders, ImGuiWindowFlags_NoScrollbar);
-        {
-            auto& itemFromWeaponConfig = getMenuInstance().rage.config[getMenuInstance().rage.configSelect.item.value];
-
-            ImGui::PushItemWidth(configChildSize.x * 0.958f);
-            if (getMenuInstance().rage.configSelect.item.value != 0)
-                checkbox::render(itemFromWeaponConfig.overrideGlobal);
-
-            checkbox::render(itemFromWeaponConfig.autoFire);
-            checkbox::render(itemFromWeaponConfig.autoScope);
-            slider::render(itemFromWeaponConfig.fov);
-            multicombobox::render(itemFromWeaponConfig.hitBoxes);
-            multicombobox::render(itemFromWeaponConfig.multiPoints);
-            slider::render(itemFromWeaponConfig.pointHeadScale);
-            slider::render(itemFromWeaponConfig.pointBodyScale);
-            checkbox::render(itemFromWeaponConfig.preferBody);
-            slider::render(itemFromWeaponConfig.hitChance);
-            slider::render(itemFromWeaponConfig.minDamage);
-            multicombobox::render(itemFromWeaponConfig.quickStop);
-            ImGui::PopItemWidth();
-        }
-        ImGui::EndChild();
-    }
-    ImGui::EndGroup();
-}
-
-void renderLegitTab()
-{
-
-}
-
-void renderVisualsTab()
-{
-
-}
-
-void renderMiscTab()
-{
-
-}
-
-void renderSkinsTab()
-{
-}
-
 void renderConfigsTab()
 {
     ImGui::BeginGroup();
     {
-        combobox::render(getMenuInstance().dpiScale);
+        combobox::render(getMenuInstance().dpiScale, CHILD_CATEGORY_FIRST);
 
         if (ImGui::SmallButton("Save"))
             config::saveConfig();
@@ -164,7 +55,104 @@ void renderLUATab()
 
 void renderChildContents(int selection, int subTabSelection, int childType)
 {
+    getMenuInstance().updateChildType(childType);
 
+    switch (selection)
+    {
+    case TAB_RAGE:
+    {
+        switch (subTabSelection)
+        {
+        case SUBTAB_RAGE_AIMBOT:
+        {
+            combobox::render(getMenuInstance().rage.configSelect, CHILD_CATEGORY_FIRST);
+
+            checkbox::render(getMenuInstance().rage.enable, CHILD_CATEGORY_FIRST);
+            checkbox::render(getMenuInstance().rage.autoRevolver, CHILD_CATEGORY_FIRST);
+            checkbox::render(getMenuInstance().rage.doubleTap, CHILD_CATEGORY_FIRST);
+            checkbox::render(getMenuInstance().rage.noSpread, CHILD_CATEGORY_FIRST);
+            checkbox::render(getMenuInstance().rage.duckPeekAssist, CHILD_CATEGORY_FIRST);
+
+            auto& itemFromWeaponConfig = getMenuInstance().rage.config[getMenuInstance().rage.configSelect.item.value];
+            if (getMenuInstance().rage.configSelect.item.value != 0)
+                checkbox::render(itemFromWeaponConfig.overrideGlobal, CHILD_CATEGORY_SECOND);
+
+            checkbox::render(itemFromWeaponConfig.autoFire, CHILD_CATEGORY_SECOND);
+            checkbox::render(itemFromWeaponConfig.autoScope, CHILD_CATEGORY_SECOND);
+            slider::render(itemFromWeaponConfig.fov, CHILD_CATEGORY_SECOND);
+            multicombobox::render(itemFromWeaponConfig.hitBoxes, CHILD_CATEGORY_SECOND);
+            multicombobox::render(itemFromWeaponConfig.multiPoints, CHILD_CATEGORY_SECOND);
+            slider::render(itemFromWeaponConfig.pointHeadScale, CHILD_CATEGORY_SECOND);
+            slider::render(itemFromWeaponConfig.pointBodyScale, CHILD_CATEGORY_SECOND);
+            checkbox::render(itemFromWeaponConfig.preferBody, CHILD_CATEGORY_SECOND);
+            slider::render(itemFromWeaponConfig.hitChance, CHILD_CATEGORY_SECOND);
+            slider::render(itemFromWeaponConfig.minDamage, CHILD_CATEGORY_SECOND);
+            multicombobox::render(itemFromWeaponConfig.quickStop, CHILD_CATEGORY_SECOND);
+        }
+        break;
+        case SUBTAB_RAGE_ANTIAIM:
+        {
+            checkbox::render(getMenuInstance().rage.antiAim.enable, CHILD_CATEGORY_FIRST);
+            checkbox::render(getMenuInstance().rage.antiAim.atTarget, CHILD_CATEGORY_FIRST);
+            combobox::render(getMenuInstance().rage.antiAim.pitch, CHILD_CATEGORY_FIRST);
+            combobox::render(getMenuInstance().rage.antiAim.yaw, CHILD_CATEGORY_FIRST);
+            combobox::render(getMenuInstance().rage.antiAim.jitter, CHILD_CATEGORY_FIRST);
+            slider::render(getMenuInstance().rage.antiAim.jitterOffset, CHILD_CATEGORY_FIRST);
+            slider::render(getMenuInstance().rage.antiAim.yawOffset, CHILD_CATEGORY_FIRST);
+
+            ImGui::BeginGroup();
+            {
+                checkbox::render(getMenuInstance().rage.antiAim.freestanding, CHILD_CATEGORY_FIRST);
+                ImGui::SameLine();
+
+                if (ImGui::SmallButton("..."))
+                {
+                    ImGui::OpenPopup("freestand-popup");
+                }
+
+                if (ImGui::BeginPopup("freestand-popup"))
+                {
+                    checkbox::render(getMenuInstance().rage.antiAim.zeroOnPeek, CHILD_CATEGORY_FIRST);
+                    ImGui::EndPopup();
+                }
+            }
+            ImGui::EndGroup();
+        }
+        break;
+        }
+    }
+    break;
+    case TAB_LEGIT:
+    {
+
+    }
+    break;
+    case TAB_VISUALS:
+    {
+
+    }
+    break;
+    case TAB_MISC:
+    {
+
+    }
+    break;
+    case TAB_SKINS:
+    {
+
+    }
+    break;
+    case TAB_CONFIGS:
+    {
+
+    }
+    break;
+    case TAB_LUA:
+    {
+
+    }
+    break;
+    }
 }
 
 ImVec4 interpolateWithoutAlpha(const ImVec4& start, const ImVec4& end, float step, float mainAlpha)

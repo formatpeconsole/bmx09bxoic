@@ -15,6 +15,12 @@ enum UI_TABS
     TAB_LUA
 };
 
+enum UI_RAGE_SUB_TABS
+{
+    SUBTAB_RAGE_AIMBOT = 0,
+    SUBTAB_RAGE_ANTIAIM
+};
+
 enum CHILD_ANIMATION
 {
     CHILD_SECOND = 0,

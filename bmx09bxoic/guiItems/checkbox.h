@@ -34,8 +34,11 @@ inline void addCheckBoxBind(CheckBox& checkbox)
 
 inline decltype(&addCheckBoxBind) checkBoxBindCallback = addCheckBoxBind;
 
-inline void render(CheckBox& checkbox)
+inline void render(CheckBox& checkbox, int childType)
 {
+    if (getMenuInstance().getChildType() != childType)
+        return;
+
     auto& item = checkbox.item;
 
     std::string itemKey = std::to_string(reinterpret_cast<uintptr_t>(&item));
