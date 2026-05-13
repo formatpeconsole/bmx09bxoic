@@ -59,4 +59,7 @@ namespace objRender
 {
 extern ImDrawList* getDrawList();
 extern void renderText(Font& font, ImVec2 pos, ImColor&& color, const char* string);
+extern void drawRect(ImVec2 pos, ImVec2 size, ImColor&& color, float rounding = 0.f, ImDrawFlags flags = 0, float thickness = 1.f);
+extern void drawFilledRect(ImVec2 pos, ImVec2 size, ImColor&& color, float rounding = 0.f, ImDrawFlags flags = 0);
+extern void drawRectShadow(ImVec2 pos, ImVec2 size, ImColor&& color, int range, float shadowAlpha, float rounding = 0.f, ImDrawFlags flags = 0);
 }

@@ -153,7 +153,6 @@ struct WindowsManager
 
 struct Menu
 {
-    int childType = 0;
     ItemOldValue<bool> openedOldValue{};
     bool opened = false;
     bool newOpened = true;
@@ -177,9 +176,6 @@ struct Menu
     void initWindows();
     void renderWindows();
     void destroyWindows();
-
-    int getChildType();
-    void updateChildType(int type);
 };
 
 extern void init();

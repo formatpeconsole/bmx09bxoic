@@ -4,6 +4,8 @@
 #include "../gui/gui.h"
 #include "../gui/framework/window.h"
 
+#include "../cheat-base/math.h"
+
 #include "fonts/iosevkaCharon.h"
 
 namespace render
@@ -231,5 +233,40 @@ void renderText(Font& font, ImVec2 pos, ImColor&& color, const char* string)
     drawList->PushTextureID(font.font->OwnerAtlas->TexID);
     drawList->AddText(font.font, font.size, pos, color, string);
     drawList->PopTextureID();
+}
+
+void drawRect(ImVec2 pos, ImVec2 size, ImColor&& color, float rounding, ImDrawFlags flags, float thickness)
+{
+    auto drawList = getDrawList();
+    drawList->AddRect(pos, pos + size, color, rounding, flags, thickness);
+}
+
+void drawFilledRect(ImVec2 pos, ImVec2 size, ImColor&& color, float rounding, ImDrawFlags flags)
+{
+    auto drawList = getDrawList();
+    drawList->AddRectFilled(pos, pos + size, color, rounding, flags);
+}
+
+void drawRectShadow(ImVec2 pos, ImVec2 size, ImColor&& color, int range, float shadowAlpha, float rounding, ImDrawFlags flags)
+{
+    auto minPos = pos;
+    auto maxPos = pos + size;
+
+    auto drawList = getDrawList();
+    for (int i = 0; i < range; ++i)
+    {
+        float step = (math::toFloat(i) / math::toFloat(range - 1));
+        float alphaStep = std::lerp(shadowAlpha, 0.f, step);
+        int bgAlpha = math::toInt(alphaStep);
+        float alpha = math::toFloat(bgAlpha) / 255.f;
+        ImColor newColor = ImColor(color.Value.x, color.Value.y, color.Value.z, color.Value.w * alpha);
+
+        float offsetStep = math::toFloat(i);
+        drawList->AddRect(
+            ImVec2{ math::toFloat(math::toInt(minPos.x - offsetStep)), math::toFloat(math::toInt(minPos.y - offsetStep)) },
+            ImVec2{ math::toFloat(math::toInt(maxPos.x + offsetStep)), math::toFloat(math::toInt(maxPos.y + offsetStep)) },
+            newColor,
+            rounding, flags, 1.f);
+    }
 }
 }

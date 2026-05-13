@@ -91,6 +91,7 @@ using subTabChilds = std::vector<std::string>;
 struct subTab
 {
     subTabChilds childs{};
+    tabAnimation tabAnim{};
     std::string name{};
     int childCount{};
 
@@ -103,22 +104,16 @@ struct subTab
 
 struct tabItself
 {
-    tabAnimationsList subTabAnimations{};
     std::vector<subTab> subTabs{};
+    tabAnimation tabAnim{};
     std::string name{};
     int subTabSelection{};
     bool noSubTabs = false;
 
     tabItself(std::vector<subTab> subTabs, std::string name, bool noSubTabs) :
-        subTabs(subTabs), name(name), subTabSelection(0), noSubTabs(noSubTabs)
-    {
-        subTabAnimations.resize(subTabs.size());
-    }
+        subTabs(subTabs), name(name), subTabSelection(0), noSubTabs(noSubTabs) {}
 
-    ~tabItself()
-    {
-        subTabAnimations.clear();
-    }
+    ~tabItself() {}
 };
 
 using tabsList = std::vector<tabItself>;
@@ -155,7 +150,6 @@ private:
     int getMainAlpha();
 
     itemsList items{};
-    tabAnimationsList tabsAnimations{};
     tabsList tabs{};
 
     tabSelectionAnimation tabSelectionAnim{};

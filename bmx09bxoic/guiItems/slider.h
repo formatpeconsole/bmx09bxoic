@@ -37,11 +37,8 @@ template<typename T>
 inline decltype(&addSliderBind<T>) bindCallback = addSliderBind<T>;
 
 template<typename T>
-inline void render(Slider<T>& slider, int childType)
+inline void render(Slider<T>& slider)
 {
-    if (getMenuInstance().getChildType() != childType)
-        return;
-
     auto& item = slider.item;
 
     std::string itemKey = std::to_string(reinterpret_cast<uintptr_t>(&item));

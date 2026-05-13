@@ -36,11 +36,8 @@ inline void addCheckBoxBind(CheckBox& checkbox)
 
 inline decltype(&addCheckBoxBind) checkBoxBindCallback = addCheckBoxBind;
 
-inline void render(const gui::framework::baseItemPtr& baseItem, int childType)
+inline void render(const gui::framework::baseItemPtr& baseItem)
 {
-    if (getMenuInstance().getChildType() != childType)
-        return;
-
     auto checkBoxItemPtr = reinterpret_cast<CheckBox*>(baseItem->getItemPtr());
 
     auto& item = checkBoxItemPtr->item;

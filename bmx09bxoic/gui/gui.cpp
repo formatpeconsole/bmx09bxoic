@@ -201,7 +201,7 @@ void Menu::initWindows()
             "LUA-scripts",
             true
         },
-    }, "OPAIHOOK", MAIN_WINDOW_SIZE));
+    }, "BMX09BXOIC", MAIN_WINDOW_SIZE));
 
     for (auto window : windows)
         window->init();
@@ -264,15 +264,5 @@ void Menu::initConfig()
     itemsInMemory.emplace_back(ITEM_PTR_RT(rage.noSpread));
     itemsInMemory.emplace_back(ITEM_PTR_RT(rage.duckPeekAssist));
     itemsInMemory.emplace_back(ITEM_PTR_RT(rage.configSelect));
-}
-
-int Menu::getChildType()
-{
-    return childType;
-}
-
-void Menu::updateChildType(int type)
-{
-    childType = type;
 }
 }

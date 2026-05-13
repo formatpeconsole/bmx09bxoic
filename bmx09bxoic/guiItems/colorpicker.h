@@ -36,11 +36,8 @@ inline void addColorPickerBind(ColorPicker& colorPicker)
 
 inline decltype(&addColorPickerBind) colorPickerBindCallback = addColorPickerBind;
 
-inline void render(ColorPicker& colorPicker, int childType)
+inline void render(ColorPicker& colorPicker)
 {
-    if (getMenuInstance().getChildType() != childType)
-        return;
-
     auto& item = colorPicker.item;
 
     std::string itemKey = std::to_string(reinterpret_cast<uintptr_t>(&item));

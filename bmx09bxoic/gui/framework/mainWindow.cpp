@@ -89,7 +89,7 @@ void renderConfigsTab()
 {
     ImGui::BeginGroup();
     {
-        combobox::render(getMenuInstance().dpiScale, CHILD_CATEGORY_FIRST);
+        combobox::render(getMenuInstance().dpiScale);
 
         if (ImGui::SmallButton("Save"))
             config::saveConfig();
@@ -179,15 +179,13 @@ void MainWindow::renderItem(const baseItemPtr& baseItem, const RealItemPath& cur
     switch (type)
     {
     case ITEM_CHECKBOX:
-        checkbox::render(baseItem, realPath.childCategory);
+        checkbox::render(baseItem);
         break;
     }
 }
 
 void MainWindow::renderChildContents(int selection, int subTabSelection, int childType)
 {
-    getMenuInstance().updateChildType(childType);
-
     RealItemPath itemPath{ selection, subTabSelection, childType };
 
     for (auto& i : items)
@@ -380,14 +378,12 @@ bool tabButton(const char* name, const char* formattedName, ImVec2 sizeArg, bool
 MainWindow::MainWindow(tabsList tabs, std::string name, ImVec2 size)
     : tabs(tabs), name(name), size(size), tabSelection(0), prevDpiScale(1.f), windowAlpha(0.f)
 {
-    tabsAnimations.resize(tabs.size());
     initItems();
 }
 
 MainWindow::~MainWindow()
 {
     tabs.clear();
-    tabsAnimations.clear();
     items.clear();
 }
 
@@ -459,7 +455,7 @@ void MainWindow::renderTabs()
                     tabSelectionAnim.yPos = tabSelectionAnim.beginPosY + 3.f * DPI_SCALE;
             }
 
-            if (tabButton(tabName.c_str(), formattedName.c_str(), ImVec2(buttonXSize, buttonYSize), i == tabSelection, tabsAnimations[i], mainAlpha))
+            if (tabButton(tabName.c_str(), formattedName.c_str(), ImVec2(buttonXSize, buttonYSize), i == tabSelection, tabs[i].tabAnim, mainAlpha))
                 tabSelection = i;
 
             ImGui::Dummy({ 0.f, dummyYSize });
@@ -570,7 +566,7 @@ void MainWindow::renderTabsContents()
             auto formattedName = gui::items::getFormattedText(tabName);
             float buttonXSize = math::toFloat(formattedName.length() * 11) * DPI_SCALE;
             if (tabButton(tabName.c_str(), formattedName.c_str(), ImVec2(buttonXSize, buttonYSize),
-                i == selectedTab.subTabSelection, selectedTab.subTabAnimations[i], mainAlpha))
+                i == selectedTab.subTabSelection, selectedTab.subTabs[i].tabAnim, mainAlpha))
                 selectedTab.subTabSelection = i;
 
             basicSpacing += (buttonXSize + buttonXSpacing);
@@ -629,7 +625,7 @@ void MainWindow::renderTabsContents()
                             ImGui::BeginChild("Third##bmx09bxoic", groupBoxSize, 0, ImGuiWindowFlags_NoBackground);
                             {
                                 auto currentGroupBoxPos = ImGui::GetWindowPos() + ImGui::GetCursorPos();
-                                drawList->AddRectFilled(currentGroupBoxPos, currentGroupBoxPos + groupBoxSize, ImColor(33, 33, 33, thirdChildAlpha), 17.f);
+                                objRender::drawFilledRect(currentGroupBoxPos, groupBoxSize, ImColor(33, 33, 33, thirdChildAlpha), 17.f);
 
                                 std::string childName = selectedSubTab.has_value() && selectedSubTab->childCount > 2 ? gui::items::getFormattedText(selectedSubTab->childs[2]) : "";
                                 objRender::renderText(render::getFont(FONT_ITEMS), currentGroupBoxPos + textOffset, ImColor(174, 174, 174, thirdChildAlpha), childName.c_str());
@@ -658,7 +654,7 @@ void MainWindow::renderTabsContents()
                             ImGui::BeginChild("Second##bmx09bxoic", groupBoxSize, 0, ImGuiWindowFlags_NoBackground);
                             {
                                 auto currentGroupBoxPos = ImGui::GetWindowPos() + ImGui::GetCursorPos();
-                                drawList->AddRectFilled(currentGroupBoxPos, currentGroupBoxPos + groupBoxSize, ImColor(33, 33, 33, secondChildAlpha), 17.f);
+                                objRender::drawFilledRect(currentGroupBoxPos, groupBoxSize, ImColor(33, 33, 33, secondChildAlpha), 17.f);
 
                                 std::string childName = selectedSubTab.has_value() && selectedSubTab->childCount > 1 ? gui::items::getFormattedText(selectedSubTab->childs[1]) : "";
                                 objRender::renderText(render::getFont(FONT_ITEMS), currentGroupBoxPos + textOffset, ImColor(174, 174, 174, secondChildAlpha), childName.c_str());
@@ -685,7 +681,7 @@ void MainWindow::renderTabsContents()
                     ImGui::BeginChild("First##bmx09bxoic", groupBoxSize, 0, ImGuiWindowFlags_NoBackground);
                     {
                         auto currentGroupBoxPos = ImGui::GetWindowPos() + ImGui::GetCursorPos();
-                        drawList->AddRectFilled(currentGroupBoxPos, currentGroupBoxPos + groupBoxSize, ImColor(33, 33, 33, mainAlpha), 17.f);
+                        objRender::drawFilledRect(currentGroupBoxPos, groupBoxSize, ImColor(33, 33, 33, mainAlpha), 17.f);
 
                         std::string childName = selectedSubTab.has_value() ? gui::items::getFormattedText(selectedSubTab->childs[0]) : "Main";
                         objRender::renderText(render::getFont(FONT_ITEMS), currentGroupBoxPos + textOffset, ImColor(174, 174, 174, mainAlpha), childName.c_str());
@@ -765,35 +761,24 @@ void MainWindow::render()
         auto minPos = pos;
         auto maxPos = pos + size;
 
-        // main bg
+        // background
         {
-            drawList->AddRectFilled(minPos, maxPos, ImColor(33, 33, 33, getMainAlpha()), 17.f);
+            objRender::drawFilledRect(pos, size, ImColor(33, 33, 33, getMainAlpha()), 17.f);
 
             // main ui (name, items, info)
             renderWindowContents();
         }
 
-        // bg border
+        // border
         {
-            // border shadow
-            const int max = math::toInt(10.f * DPI_SCALE);
-            for (int i = 0; i < max; ++i)
-            {
-                float step = (math::toFloat(i) / math::toFloat(max - 1));
-                float alphaStep = std::lerp(45.f, 0.f, step);
-                int bgAlpha = math::toInt(alphaStep * windowAlpha);
-
-                float offsetStep = 2.f + 1.f * math::toFloat(i);
-                drawList->AddRect(
-                    ImVec2{ math::toFloat(math::toInt(minPos.x - offsetStep)), math::toFloat(math::toInt(minPos.y - offsetStep)) },
-                    ImVec2{ math::toFloat(math::toInt(maxPos.x + offsetStep)), math::toFloat(math::toInt(maxPos.y + offsetStep)) },
-                    ImColor(0, 0, 0, bgAlpha),
-                    17.f, 0, 1.f);
-            }
-
-            // border
             int borderBgAlpha = math::toInt(7.f * windowAlpha);
-            drawList->AddRect({ minPos.x - 1.f, minPos.y - 1.f }, { maxPos.x + 1.f, maxPos.y + 1.f }, ImColor(33, 33, 33, borderBgAlpha), 17.f);
+            ImVec2 borderOffset = ImVec2(1.f, 1.f);
+            ImVec2 shadowBorderOffset = ImVec2(2.f, 2.f);
+
+            const int maxShadowRange = math::toInt(10.f * DPI_SCALE);
+            ImColor shadowColor = ImColor(0, 0, 0, getMainAlpha());
+            objRender::drawRectShadow(pos - shadowBorderOffset, size + shadowBorderOffset * 2, std::forward<ImColor>(shadowColor), maxShadowRange, 45.f, 17.f);
+            objRender::drawRect(pos - borderOffset, size + borderOffset, ImColor(33, 33, 33, borderBgAlpha), 17.f);
         }
     }
     ImGui::End();
