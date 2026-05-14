@@ -9,6 +9,8 @@
 
 #include "../gui/item.h"
 #include "../gui/gui.h"
+#include "../gui/framework/items.h"
+
 #include "keybind.h"
 #include "utils.h"
 
@@ -37,9 +39,10 @@ template<typename T>
 inline decltype(&addSliderBind<T>) bindCallback = addSliderBind<T>;
 
 template<typename T>
-inline void render(Slider<T>& slider)
+inline void render(const gui::framework::baseItemPtr& baseItem)
 {
-    auto& item = slider.item;
+    auto slider = reinterpret_cast<Slider<T>*>(baseItem->getItemPtr());
+    auto& item = slider->item;
 
     std::string itemKey = std::to_string(reinterpret_cast<uintptr_t>(&item));
     std::string itemValueKey = std::to_string(reinterpret_cast<uintptr_t>(&item.value));
@@ -55,17 +58,17 @@ inline void render(Slider<T>& slider)
     {
         std::string hiddenName = "##slider-float-for-" + item.name;
         ImGui::Text(getFormattedText(item.name).c_str());
-        ImGui::SliderFloat(hiddenName.c_str(), &item.value, slider.min, slider.max);
+        ImGui::SliderFloat(hiddenName.c_str(), &item.value, slider->min, slider->max);
 
-        item.value = std::clamp(item.value, slider.min, slider.max);
+        item.value = std::clamp(item.value, slider->min, slider->max);
     }
     else if constexpr (std::is_same<T, int>::value)
     {
         std::string hiddenName = "##slider-int-for-" + item.name;
         ImGui::Text(getFormattedText(item.name).c_str());
-        ImGui::SliderInt(hiddenName.c_str(), &item.value, slider.min, slider.max);
+        ImGui::SliderInt(hiddenName.c_str(), &item.value, slider->min, slider->max);
 
-        item.value = std::clamp(item.value, slider.min, slider.max);
+        item.value = std::clamp(item.value, slider->min, slider->max);
     }
     else
     {
@@ -96,7 +99,7 @@ inline void render(Slider<T>& slider)
 
                 if (ImGui::SmallButton(bindAdd.c_str()))
                 {
-                    bindCallback<T>(slider);
+                    bindCallback<T>(*slider);
 
                     preview.selection = 0;
                     preview.selectedBind.reset();
@@ -129,7 +132,7 @@ inline void render(Slider<T>& slider)
 
                     if (ImGui::SmallButton(bindPlus.c_str()))
                     {
-                        bindCallback<T>(slider);
+                        bindCallback<T>(*slider);
                         preview.selectedBind.reset();
                         preview.selection = bindsIter;
                         continue;
@@ -181,17 +184,17 @@ inline void render(Slider<T>& slider)
                 {
                     std::string hiddenName = "##slider-float-for-" + valueName;
                     ImGui::Text(getFormattedText(valueName).c_str());
-                    ImGui::SliderFloat(hiddenName.c_str(), &value->value, slider.min, slider.max);
+                    ImGui::SliderFloat(hiddenName.c_str(), &value->value, slider->min, slider->max);
 
-                    value->value = std::clamp(value->value, slider.min, slider.max);
+                    value->value = std::clamp(value->value, slider->min, slider->max);
                 }
                 else if constexpr (std::is_same<T, int>::value)
                 {
                     std::string hiddenName = "##slider-int-for-" + valueName;
                     ImGui::Text(getFormattedText(valueName).c_str());
-                    ImGui::SliderInt(hiddenName.c_str(), &value->value, slider.min, slider.max);
+                    ImGui::SliderInt(hiddenName.c_str(), &value->value, slider->min, slider->max);
 
-                    value->value = std::clamp(value->value, slider.min, slider.max);
+                    value->value = std::clamp(value->value, slider->min, slider->max);
                 }
                 else
                 {

@@ -9,6 +9,8 @@
 
 #include "../gui/item.h"
 #include "../gui/gui.h"
+#include "../gui/framework/items.h"
+
 #include "keybind.h"
 #include "utils.h"
 
@@ -40,9 +42,10 @@ inline const char* Items_VectorGetter(void* data, int idx)
     return items[idx].c_str();
 }
 
-inline void render(ComboBox& comboBox)
+inline void render(const gui::framework::baseItemPtr& baseItem)
 {
-    auto& item = comboBox.item;
+    auto comboBox = reinterpret_cast<ComboBox*>(baseItem->getItemPtr());
+    auto& item = comboBox->item;
 
     std::string itemKey = std::to_string(reinterpret_cast<uintptr_t>(&item));
     std::string itemValueKey = std::to_string(reinterpret_cast<uintptr_t>(&item.value));
@@ -87,7 +90,7 @@ inline void render(ComboBox& comboBox)
 
                 if (ImGui::SmallButton(bindAdd.c_str()))
                 {
-                    comboBoxBindCallback(comboBox);
+                    comboBoxBindCallback(*comboBox);
 
                     preview.selection = 0;
                     preview.selectedBind.reset();
@@ -120,7 +123,7 @@ inline void render(ComboBox& comboBox)
 
                     if (ImGui::SmallButton(bindPlus.c_str()))
                     {
-                        comboBoxBindCallback(comboBox);
+                        comboBoxBindCallback(*comboBox);
                         preview.selectedBind.reset();
                         preview.selection = bindsIter;
                         continue;

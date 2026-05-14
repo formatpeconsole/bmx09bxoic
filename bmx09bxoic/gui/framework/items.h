@@ -88,23 +88,50 @@ public:
 };
 using baseItemPtr = std::shared_ptr<BaseItem>;
 
-class ItemCheckBox : public BaseItem
+template<typename T>
+class UiItem : public BaseItem
 {
 public:
-    ItemCheckBox(CheckBox* itemPtr, RealItemPath realItemPath, luaItemPath luaItemPath);
+    UiItem(T* itemPtr, RealItemPath realItemPath, luaItemPath luaItemPath)
+        : luaPath(luaItemPath), realItemPath(realItemPath), 
+        itemPtr(itemPtr), itemType(itemPtr->item.itemType) {}
 
-    int getItemType() override;
-    RealItemPath getRealItemPath() override;
-    void* getItemPtr() override;
-    void createKey() override;
-    fnv64Hash getLuaKey() override;
-    std::string getLuaPath() override;
+    int getItemType()
+    {
+        return itemType;
+    }
+
+    RealItemPath getRealItemPath()
+    {
+        return realItemPath;
+    }
+
+    void* getItemPtr()
+    {
+        return reinterpret_cast<void*>(itemPtr);
+    }
+
+    void createKey()
+    {
+        luaItemKey.path = getLuaItemPath(luaPath);
+        luaItemKey.hash = getLuaItemKey(luaPath);
+    }
+
+    fnv64Hash getLuaKey()
+    {
+        return luaItemKey.hash;
+    }
+
+    std::string getLuaPath()
+    {
+        return luaItemKey.path;
+    }
 
 private:
     luaItemPath luaPath{};
     RealItemPath realItemPath{};
     LuaItemKey luaItemKey{};
-    CheckBox* itemPtr{};
+    T* itemPtr{};
     int itemType{};
 };
 

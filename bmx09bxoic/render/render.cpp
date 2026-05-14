@@ -269,4 +269,45 @@ void drawRectShadow(ImVec2 pos, ImVec2 size, ImColor&& color, int range, float s
             rounding, flags, 1.f);
     }
 }
+
+void drawCircle(ImVec2 pos, float radius, ImColor&& color, int segments, float thickness)
+{
+    auto drawList = getDrawList();
+    drawList->AddCircle(pos, radius, color, segments);
+}
+
+void drawCircleShadow(ImVec2 pos, float radius, ImColor&& color, int range, float shadowAlpha)
+{
+    auto drawList = getDrawList();
+    for (int i = 0; i < range; ++i)
+    {
+        float step = (math::toFloat(i) / math::toFloat(range - 1));
+        float alphaStep = std::lerp(shadowAlpha, 0.f, step);
+        int bgAlpha = math::toInt(alphaStep);
+        float alpha = math::toFloat(bgAlpha) / 255.f;
+
+        float fadeRadius = std::lerp(radius, radius * 2.8f, step);
+
+        ImColor newColor = ImColor(color.Value.x, color.Value.y, color.Value.z, color.Value.w * alpha);
+        drawList->AddCircle(pos, fadeRadius, newColor);
+    }
+}
+
+void drawCircleFilled(ImVec2 pos, float radius, ImColor&& color, int segments)
+{
+    auto drawList = getDrawList();
+    drawList->AddCircleFilled(pos, radius, color, segments);
+}
+
+void drawTriangle(ImVec2 p1, ImVec2 p2, ImVec2 p3, ImColor&& color, float thickness)
+{
+    auto drawList = getDrawList();
+    drawList->AddTriangle(p1, p2, p3, color, thickness);
+}
+
+void drawTriangleFilled(ImVec2 p1, ImVec2 p2, ImVec2 p3, ImColor&& color)
+{
+    auto drawList = getDrawList();
+    drawList->AddTriangleFilled(p1, p2, p3, color);
+}
 }

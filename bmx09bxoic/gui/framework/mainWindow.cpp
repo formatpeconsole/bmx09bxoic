@@ -52,44 +52,21 @@
 // 
 //
 //
-
 #define ITEM_PATH(...) { __VA_ARGS__ }
-#define PLACE_CHECKBOX(itemPtr, path) \
-    { \
-        auto currentItemPtr = itemPtr;\
-        luaItemPath itemPath{ path }; \
-        itemPath.emplace_back(gui::items::getFormattedText(currentItemPtr->item.name)); \
-        auto realItemPath = getRealItemPath(itemPath); \
-        if (!realItemPath.has_value()) \
-        { \
-            assert(false && "Wrong CheckBox Item Path!"); \
-        } \
-        items.emplace_back(std::make_shared<ItemCheckBox>(currentItemPtr, realItemPath.value(), itemPath)); \
-    } \
+#define PLACE_CHECKBOX(itemPtr, path) placeItem<CheckBox>(itemPtr, path)
+#define PLACE_SLIDER_INT(itemPtr, path) placeItem<Slider<int>>(itemPtr, path)
+#define PLACE_SLIDER_FLOAT(itemPtr, path) placeItem<Slider<float>>(itemPtr, path)
+#define PLACE_COMBO(itemPtr, path) placeItem<ComboBox>(itemPtr, path)
+#define PLACE_MULTICOMBO(itemPtr, path) placeItem<MultiComboBox>(itemPtr, path)
+#define PLACE_COLORPICKER(itemPtr, path) placeItem<ColorPicker>(itemPtr, path)
 
 namespace gui::framework
 {
-void renderSubTabs(const std::vector<std::string>& tabs, int& selection)
-{
-    ImGui::BeginGroup();
-    for (int i = 0; i < tabs.size(); ++i)
-    {
-        if (ImGui::Button(tabs[i].c_str(), ImVec2(tabs[i].length() * 10, 18)))
-            selection = i;
-
-        ImGui::SameLine();
-    }
-    ImGui::EndGroup();
-    ImGui::Spacing();
-    ImGui::Separator();
-    ImGui::Spacing();
-}
-
 void renderConfigsTab()
 {
     ImGui::BeginGroup();
     {
-        combobox::render(getMenuInstance().dpiScale);
+     //   combobox::render(getMenuInstance().dpiScale);
 
         if (ImGui::SmallButton("Save"))
             config::saveConfig();
@@ -181,6 +158,21 @@ void MainWindow::renderItem(const baseItemPtr& baseItem, const RealItemPath& cur
     case ITEM_CHECKBOX:
         checkbox::render(baseItem);
         break;
+    case ITEM_SLIDER_INT:
+        slider::render<int>(baseItem);
+        break;
+    case ITEM_SLIDER_FLOAT:
+        slider::render<float>(baseItem);
+        break;
+    case ITEM_COMBOBOX:
+        combobox::render(baseItem);
+        break;
+    case ITEM_MULTICOMBOBOX:
+        multicombobox::render(baseItem);
+        break;
+    case ITEM_COLOR:
+        colorpicker::render(baseItem);
+        break;
     }
 }
 
@@ -190,104 +182,6 @@ void MainWindow::renderChildContents(int selection, int subTabSelection, int chi
 
     for (auto& i : items)
         renderItem(i, itemPath);
-
-
-   /* switch (selection)
-    {
-    case TAB_RAGE:
-    {
-        switch (subTabSelection)
-        {
-        case SUBTAB_RAGE_AIMBOT:
-        {
-            combobox::render(getMenuInstance().rage.configSelect, CHILD_CATEGORY_FIRST);
-
-            checkbox::render(getMenuInstance().rage.enable, CHILD_CATEGORY_FIRST);
-            checkbox::render(getMenuInstance().rage.autoRevolver, CHILD_CATEGORY_FIRST);
-            checkbox::render(getMenuInstance().rage.doubleTap, CHILD_CATEGORY_FIRST);
-            checkbox::render(getMenuInstance().rage.noSpread, CHILD_CATEGORY_FIRST);
-            checkbox::render(getMenuInstance().rage.duckPeekAssist, CHILD_CATEGORY_FIRST);
-
-            auto& itemFromWeaponConfig = getMenuInstance().rage.config[getMenuInstance().rage.configSelect.item.value];
-            if (getMenuInstance().rage.configSelect.item.value != 0)
-                checkbox::render(itemFromWeaponConfig.overrideGlobal, CHILD_CATEGORY_SECOND);
-
-            checkbox::render(itemFromWeaponConfig.autoFire, CHILD_CATEGORY_SECOND);
-            checkbox::render(itemFromWeaponConfig.autoScope, CHILD_CATEGORY_SECOND);
-            slider::render(itemFromWeaponConfig.fov, CHILD_CATEGORY_SECOND);
-            multicombobox::render(itemFromWeaponConfig.hitBoxes, CHILD_CATEGORY_SECOND);
-            multicombobox::render(itemFromWeaponConfig.multiPoints, CHILD_CATEGORY_SECOND);
-            slider::render(itemFromWeaponConfig.pointHeadScale, CHILD_CATEGORY_SECOND);
-            slider::render(itemFromWeaponConfig.pointBodyScale, CHILD_CATEGORY_SECOND);
-            checkbox::render(itemFromWeaponConfig.preferBody, CHILD_CATEGORY_SECOND);
-            slider::render(itemFromWeaponConfig.hitChance, CHILD_CATEGORY_SECOND);
-            slider::render(itemFromWeaponConfig.minDamage, CHILD_CATEGORY_SECOND);
-            multicombobox::render(itemFromWeaponConfig.quickStop, CHILD_CATEGORY_SECOND);
-        }
-        break;
-        case SUBTAB_RAGE_ANTIAIM:
-        {
-            checkbox::render(getMenuInstance().rage.antiAim.enable, CHILD_CATEGORY_FIRST);
-            checkbox::render(getMenuInstance().rage.antiAim.atTarget, CHILD_CATEGORY_FIRST);
-            combobox::render(getMenuInstance().rage.antiAim.pitch, CHILD_CATEGORY_FIRST);
-            combobox::render(getMenuInstance().rage.antiAim.yaw, CHILD_CATEGORY_FIRST);
-            combobox::render(getMenuInstance().rage.antiAim.jitter, CHILD_CATEGORY_FIRST);
-            slider::render(getMenuInstance().rage.antiAim.jitterOffset, CHILD_CATEGORY_FIRST);
-            slider::render(getMenuInstance().rage.antiAim.yawOffset, CHILD_CATEGORY_FIRST);
-
-            ImGui::BeginGroup();
-            {
-                checkbox::render(getMenuInstance().rage.antiAim.freestanding, CHILD_CATEGORY_FIRST);
-                ImGui::SameLine();
-
-                if (ImGui::SmallButton("..."))
-                {
-                    ImGui::OpenPopup("freestand-popup");
-                }
-
-                if (ImGui::BeginPopup("freestand-popup"))
-                {
-                    checkbox::render(getMenuInstance().rage.antiAim.zeroOnPeek, CHILD_CATEGORY_FIRST);
-                    ImGui::EndPopup();
-                }
-            }
-            ImGui::EndGroup();
-        }
-        break;
-        }
-    }
-    break;
-    case TAB_LEGIT:
-    {
-
-    }
-    break;
-    case TAB_VISUALS:
-    {
-
-    }
-    break;
-    case TAB_MISC:
-    {
-
-    }
-    break;
-    case TAB_SKINS:
-    {
-
-    }
-    break;
-    case TAB_CONFIGS:
-    {
-
-    }
-    break;
-    case TAB_LUA:
-    {
-
-    }
-    break;
-    }*/
 }
 
 ImVec4 interpolateWithoutAlpha(const ImVec4& start, const ImVec4& end, float step, float mainAlpha)
@@ -346,30 +240,17 @@ bool tabButton(const char* name, const char* formattedName, ImVec2 sizeArg, bool
         animation.radioGlowAlpha = animation.radioAnimation.getAnimatedValue() * 0.01f;
 
         auto basePos = pos + ImVec2(4.f, 10.f) * DPI_SCALE;
-        auto drawList = objRender::getDrawList();
         if (animation.radioGlowAlpha > 0.0f)
         {
-            const int maxRange = 15;
             ImColor radioColor = animation.radioButton;
-            for (int i = 0; i < maxRange; ++i)
-            {
-                float step = (math::toFloat(i) / math::toFloat(maxRange - 1));
-                float alphaStep = std::lerp(20.f, 0.f, step);
-                int bgAlpha = math::toInt(alphaStep * uiAlpha);
-
-                float radius = std::lerp(3.5f, 10.f, step) * DPI_SCALE;
-
-                radioColor.Value.w = (math::toFloat(bgAlpha) / 255.f) * animation.radioGlowAlpha;
-                drawList->AddCircle(basePos, radius, radioColor);
-            }
+            radioColor.Value.w *= animation.radioGlowAlpha;
+            objRender::drawCircleShadow(basePos, 3.5f * DPI_SCALE, std::forward<ImColor>(radioColor), 20, 15.f);
         }
 
-        drawList->AddCircleFilled(basePos, 3.5f * DPI_SCALE, ImColor(animation.radioButton));
+        objRender::drawCircleFilled(basePos, 3.5f * DPI_SCALE, ImColor(animation.radioButton));
 
         auto textPos = pos + ImVec2(21.f, 0.f) * DPI_SCALE;
         objRender::renderText(render::getFont(FONT_ITEMS), textPos, ImColor(animation.text), formattedName);
-
-        // drawList->AddRect(pos, pos + size, ImColor(255, 255, 255, 255));
     }
 
     return pressed;
@@ -389,8 +270,40 @@ MainWindow::~MainWindow()
 
 void MainWindow::initItems()
 {
+    PLACE_COMBO(&getMenuInstance().rage.configSelect, ITEM_PATH( "Ragebot", "Aimbot", "Main" ));
     PLACE_CHECKBOX(&getMenuInstance().rage.enable, ITEM_PATH( "Ragebot", "Aimbot", "Main" ));
     PLACE_CHECKBOX(&getMenuInstance().rage.autoRevolver, ITEM_PATH( "Ragebot", "Aimbot", "Main" ));
+    PLACE_CHECKBOX(&getMenuInstance().rage.doubleTap, ITEM_PATH( "Ragebot", "Aimbot", "Main" ));
+    PLACE_CHECKBOX(&getMenuInstance().rage.noSpread, ITEM_PATH( "Ragebot", "Aimbot", "Main" ));
+    PLACE_CHECKBOX(&getMenuInstance().rage.duckPeekAssist, ITEM_PATH( "Ragebot", "Aimbot", "Main" ));
+
+    for (int i = 0; i < MAX_CONFIGS; ++i)
+    {
+        auto& itemFromWeaponConfig = getMenuInstance().rage.config[i];
+
+        PLACE_CHECKBOX(&itemFromWeaponConfig.overrideGlobal, ITEM_PATH("Ragebot", "Aimbot", "Hitscan"));
+        PLACE_CHECKBOX(&itemFromWeaponConfig.autoFire, ITEM_PATH("Ragebot", "Aimbot", "Hitscan"));
+        PLACE_CHECKBOX(&itemFromWeaponConfig.autoScope, ITEM_PATH("Ragebot", "Aimbot", "Hitscan"));
+        PLACE_SLIDER_INT(&itemFromWeaponConfig.fov, ITEM_PATH("Ragebot", "Aimbot", "Hitscan"));
+        PLACE_MULTICOMBO(&itemFromWeaponConfig.hitBoxes, ITEM_PATH("Ragebot", "Aimbot", "Hitscan"));
+        PLACE_MULTICOMBO(&itemFromWeaponConfig.multiPoints, ITEM_PATH("Ragebot", "Aimbot", "Hitscan"));
+        PLACE_SLIDER_INT(&itemFromWeaponConfig.pointHeadScale, ITEM_PATH("Ragebot", "Aimbot", "Hitscan"));
+        PLACE_SLIDER_INT(&itemFromWeaponConfig.pointBodyScale, ITEM_PATH("Ragebot", "Aimbot", "Hitscan"));
+        PLACE_CHECKBOX(&itemFromWeaponConfig.preferBody, ITEM_PATH("Ragebot", "Aimbot", "Hitscan"));
+        PLACE_SLIDER_INT(&itemFromWeaponConfig.hitChance, ITEM_PATH("Ragebot", "Aimbot", "Hitscan"));
+        PLACE_SLIDER_INT(&itemFromWeaponConfig.minDamage, ITEM_PATH("Ragebot", "Aimbot", "Hitscan"));
+        PLACE_MULTICOMBO(&itemFromWeaponConfig.quickStop, ITEM_PATH("Ragebot", "Aimbot", "Hitscan"));
+    }
+
+    PLACE_CHECKBOX(&getMenuInstance().rage.antiAim.enable, ITEM_PATH("Ragebot", "Anti-Aim", "Main"));
+    PLACE_CHECKBOX(&getMenuInstance().rage.antiAim.atTarget, ITEM_PATH("Ragebot", "Anti-Aim", "Main"));
+    PLACE_COMBO(&getMenuInstance().rage.antiAim.pitch, ITEM_PATH("Ragebot", "Anti-Aim", "Main"));
+    PLACE_COMBO(&getMenuInstance().rage.antiAim.yaw, ITEM_PATH("Ragebot", "Anti-Aim", "Main"));
+    PLACE_COMBO(&getMenuInstance().rage.antiAim.jitter, ITEM_PATH("Ragebot", "Anti-Aim", "Main"));
+    PLACE_SLIDER_INT(&getMenuInstance().rage.antiAim.jitterOffset, ITEM_PATH("Ragebot", "Anti-Aim", "Main"));
+    PLACE_SLIDER_INT(&getMenuInstance().rage.antiAim.yawOffset, ITEM_PATH("Ragebot", "Anti-Aim", "Main"));
+    PLACE_CHECKBOX(&getMenuInstance().rage.antiAim.freestanding, ITEM_PATH("Ragebot", "Anti-Aim", "Main"));
+    PLACE_CHECKBOX(&getMenuInstance().rage.antiAim.zeroOnPeek, ITEM_PATH("Ragebot", "Anti-Aim", "Main"));
 }
 
 int MainWindow::getMainAlpha()
@@ -465,26 +378,17 @@ void MainWindow::renderTabs()
         tabSelectionAnim.xPos = tabSelectionAnim.base.x * DPI_SCALE;
         tabSelectionAnim.yPos = std::lerp(tabSelectionAnim.yPos, triangleButtonCenterPosY, 0.1f);
 
-        auto drawList = objRender::getDrawList();
         auto pos = ImGui::GetWindowPos() + ImVec2(tabSelectionAnim.xPos, tabSelectionAnim.yPos);
 
         // tab selection ( RAGE > )
         // shadow
         {
             ImVec2 center = pos + (tabSelectionAnim.first + tabSelectionAnim.second + tabSelectionAnim.third) * (1.f / 3.f) * DPI_SCALE;
-            const int maxRange = 19;
+            center.x = math::toFloat(math::toInt(center.x));
+            center.y = math::toFloat(math::toInt(center.y));
 
             ImColor newClr = MAIN_WINDOW_ACCENT_COLOR;
-            for (int i = 0; i < maxRange; ++i)
-            {
-                float step = (math::toFloat(i) / math::toFloat(maxRange - 1));
-                float alphaStep = std::lerp(30.f, 0.f, step);
-                int bgAlpha = math::toInt(alphaStep * windowAlpha);
-
-                float radius = std::lerp(3.5f, math::toFloat(maxRange) - 5.f, step) * DPI_SCALE;
-                newClr.Value.w = (math::toFloat(bgAlpha) / 255.f);
-                drawList->AddCircle(center, radius, newClr);
-            }
+            objRender::drawCircleShadow(center, 5.f * DPI_SCALE, std::forward<ImColor>(newClr), 19, 25.f);
         }
 
         // selection
@@ -496,7 +400,7 @@ void MainWindow::renderTabs()
             ImColor newClr = MAIN_WINDOW_ACCENT_COLOR;
             newClr.Value.w = math::toFloat(mainAlpha) / 255.f;
 
-            drawList->AddTriangleFilled(first, second, third, newClr);
+            objRender::drawTriangleFilled(first, second, third, std::forward<ImColor>(newClr));
         }
 
         ImGui::PopFont();
@@ -589,8 +493,7 @@ void MainWindow::renderTabsContents()
             auto mainAlpha = getMainAlpha();
             int itemsAlpha = math::toInt(windowAlpha * (tabContentsAnim.selectedTabAnimation.getAnimatedValue() * 0.01f) * 255.f);
 
-            auto drawList = objRender::getDrawList();
-            drawList->AddRectFilled(currentPos, currentPos + childSize, ImColor(18, 18, 18, mainAlpha), 17.f);
+            objRender::drawFilledRect(currentPos, childSize, ImColor(18, 18, 18, mainAlpha), 17.f);
 
             ImVec2 offset = ImVec2(17.f, 17.f) * DPI_SCALE;
             ImVec2 textOffset = ImVec2(19.f, 10.f) * DPI_SCALE;
@@ -745,7 +648,6 @@ void MainWindow::render()
 
     std::string uiName = name + "##bmx09bxoic";
 
-    auto styleColor = ImGui::GetStyleColorVec4(ImGuiCol_Border);
     ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0, 0, 0, 0));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 17.f);
     ImGui::PushStyleVar(ImGuiStyleVar_Alpha, windowAlpha);
@@ -756,10 +658,6 @@ void MainWindow::render()
         | ImGuiWindowFlags_NoResize);
     {
         auto pos = ImGui::GetWindowPos();
-        auto drawList = objRender::getDrawList();
-
-        auto minPos = pos;
-        auto maxPos = pos + size;
 
         // background
         {

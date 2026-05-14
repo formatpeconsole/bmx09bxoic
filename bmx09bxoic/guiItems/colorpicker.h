@@ -9,6 +9,8 @@
 
 #include "../gui/item.h"
 #include "../gui/gui.h"
+#include "../gui/framework/items.h"
+
 #include "keybind.h"
 #include "utils.h"
 
@@ -36,9 +38,11 @@ inline void addColorPickerBind(ColorPicker& colorPicker)
 
 inline decltype(&addColorPickerBind) colorPickerBindCallback = addColorPickerBind;
 
-inline void render(ColorPicker& colorPicker)
+inline void render(const gui::framework::baseItemPtr& baseItem)
 {
-    auto& item = colorPicker.item;
+    auto colorPicker = reinterpret_cast<ColorPicker*>(baseItem->getItemPtr());
+
+    auto& item = colorPicker->item;
 
     std::string itemKey = std::to_string(reinterpret_cast<uintptr_t>(&item));
     std::string itemValueKey = std::to_string(reinterpret_cast<uintptr_t>(&item.value));
@@ -84,7 +88,7 @@ inline void render(ColorPicker& colorPicker)
 
                 if (ImGui::SmallButton(bindAdd.c_str()))
                 {
-                    colorPickerBindCallback(colorPicker);
+                    colorPickerBindCallback(*colorPicker);
 
                     preview.selection = 0;
                     preview.selectedBind.reset();
@@ -117,7 +121,7 @@ inline void render(ColorPicker& colorPicker)
 
                     if (ImGui::SmallButton(bindPlus.c_str()))
                     {
-                        colorPickerBindCallback(colorPicker);
+                        colorPickerBindCallback(*colorPicker);
                         preview.selectedBind.reset();
                         preview.selection = bindsIter;
                         continue;

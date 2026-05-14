@@ -1,5 +1,6 @@
 #pragma once
 #include "../../render/animation/animation.h"
+#include "../../guiItems/utils.h"
 
 #include "window.h"
 #include "items.h"
@@ -148,6 +149,24 @@ private:
     std::string getBuildDate();
 
     int getMainAlpha();
+
+    template<typename T>
+    void placeItem(T* ptr, luaItemPath&& path)
+    {
+        luaItemPath itemPath{ std::forward<luaItemPath>(path) };
+        itemPath.emplace_back(gui::items::getFormattedText(ptr->item.name));
+
+        auto realItemPath = getRealItemPath(itemPath);
+        if (!realItemPath.has_value())
+        {
+#ifdef _DEBUG
+            std::string message = "Wrong " + ptr->item.name + " Path!";
+            assert(false && message.c_str());
+#endif
+            return;
+        }
+        items.emplace_back(std::make_shared<UiItem<T>>(ptr, realItemPath.value(), itemPath));
+    }
 
     itemsList items{};
     tabsList tabs{};

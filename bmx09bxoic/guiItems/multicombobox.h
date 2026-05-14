@@ -9,6 +9,8 @@
 
 #include "../gui/item.h"
 #include "../gui/gui.h"
+#include "../gui/framework/items.h"
+
 #include "keybind.h"
 #include "utils.h"
 
@@ -54,9 +56,10 @@ inline std::string getActiveItems(uint32_t flags, const std::vector<std::string>
     return preview.empty() ? "None" : preview;
 }
 
-inline void render(MultiComboBox& multiComboBox)
+inline void render(const gui::framework::baseItemPtr& baseItem)
 {
-    auto& item = multiComboBox.item;
+    auto multiComboBox = reinterpret_cast<MultiComboBox*>(baseItem->getItemPtr());
+    auto& item = multiComboBox->item;
 
     std::string itemKey = std::to_string(reinterpret_cast<uintptr_t>(&item));
     std::string itemValueKey = std::to_string(reinterpret_cast<uintptr_t>(&item.value));
@@ -117,7 +120,7 @@ inline void render(MultiComboBox& multiComboBox)
 
                 if (ImGui::SmallButton(bindAdd.c_str()))
                 {
-                    multiComboBoxBindCallback(multiComboBox);
+                    multiComboBoxBindCallback(*multiComboBox);
 
                     preview.selection = 0;
                     preview.selectedBind.reset();
@@ -150,7 +153,7 @@ inline void render(MultiComboBox& multiComboBox)
 
                     if (ImGui::SmallButton(bindPlus.c_str()))
                     {
-                        multiComboBoxBindCallback(multiComboBox);
+                        multiComboBoxBindCallback(*multiComboBox);
                         preview.selectedBind.reset();
                         preview.selection = bindsIter;
                         continue;

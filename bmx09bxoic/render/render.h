@@ -62,4 +62,9 @@ extern void renderText(Font& font, ImVec2 pos, ImColor&& color, const char* stri
 extern void drawRect(ImVec2 pos, ImVec2 size, ImColor&& color, float rounding = 0.f, ImDrawFlags flags = 0, float thickness = 1.f);
 extern void drawFilledRect(ImVec2 pos, ImVec2 size, ImColor&& color, float rounding = 0.f, ImDrawFlags flags = 0);
 extern void drawRectShadow(ImVec2 pos, ImVec2 size, ImColor&& color, int range, float shadowAlpha, float rounding = 0.f, ImDrawFlags flags = 0);
+extern void drawCircle(ImVec2 pos, float radius, ImColor&& color, int segments = 0, float thickness = 1.f);
+extern void drawCircleShadow(ImVec2 pos, float radius, ImColor&& color, int range, float shadowAlpha);
+extern void drawCircleFilled(ImVec2 pos, float radius, ImColor&& color, int segments = 0);
+extern void drawTriangle(ImVec2 p1, ImVec2 p2, ImVec2 p3, ImColor&& color, float thickness = 1.f);
+extern void drawTriangleFilled(ImVec2 p1, ImVec2 p2, ImVec2 p3, ImColor&& color);
 }
