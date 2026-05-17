@@ -6,28 +6,28 @@ namespace gui::framework
 {
 using namespace items;
 
-void* getItemValuePointerFromItemPointer(void* ptr, int type)
+uintptr_t getItemValuePointerFromItemPointer(uintptr_t ptr, int type)
 {
     switch (type)
     {
     case ITEM_CHECKBOX:
-        return &reinterpret_cast<Item<bool>*>(ptr)->value;
+        return reinterpret_cast<uintptr_t>(& reinterpret_cast<Item<bool>*>(ptr)->value);
     case ITEM_SLIDER_INT:
-        return &reinterpret_cast<Item<int>*>(ptr)->value;
+        return reinterpret_cast<uintptr_t>(&reinterpret_cast<Item<int>*>(ptr)->value);
     case ITEM_SLIDER_FLOAT:
-        return &reinterpret_cast<Item<float>*>(ptr)->value;
+        return reinterpret_cast<uintptr_t>(&reinterpret_cast<Item<float>*>(ptr)->value);
     case ITEM_COMBOBOX:
-        return &reinterpret_cast<Item<int>*>(ptr)->value;
+        return reinterpret_cast<uintptr_t>(&reinterpret_cast<Item<int>*>(ptr)->value);
     case ITEM_MULTICOMBOBOX:
-        return &reinterpret_cast<Item<unsigned int>*>(ptr)->value;
+        return reinterpret_cast<uintptr_t>(&reinterpret_cast<Item<unsigned int>*>(ptr)->value);
     case ITEM_COLOR:
-        return &reinterpret_cast<Item<unsigned int>*>(ptr)->value;
+        return reinterpret_cast<uintptr_t>(&reinterpret_cast<Item<unsigned int>*>(ptr)->value);
     default:
         return {};
     }
 }
 
-std::optional<std::vector<std::string>> getItemList(void* ptr, int type)
+std::optional<std::vector<std::string>> getItemList(uintptr_t ptr, int type)
 {
     switch (type)
     {
@@ -50,7 +50,7 @@ std::optional<std::vector<std::string>> getItemList(void* ptr, int type)
 
 // in KeyBindManager i had to save value in string format for UI purposes
 // now you have to get this value and visualize in ur UI however you want
-std::string getBindValueFromString(const std::string& value, void* ptr, int itemType)
+std::string getBindValueFromString(const std::string& value, uintptr_t ptr, int itemType)
 {
     switch (itemType)
     {

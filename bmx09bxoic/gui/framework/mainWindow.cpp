@@ -13,6 +13,8 @@
 
 #include "../../cheat-base/math.h"
 
+#include "../../mem/raii.h"
+
 // what happens
 // when you put full path to UI (where item should be located)
 // name of item added automatically from real item (not rendered one, rendered one just stores pointer of existing item and changes it's state)
@@ -87,7 +89,7 @@ void renderLUATab()
 {
 }
 
-std::optional<RealItemPath> MainWindow::getRealItemPath(luaItemPath& path)
+std::optional<RealItemPath> MainWindow::getRealItemPath(itemPath& path)
 {
     if (path.empty() || path.size() < 2)
         return {};
@@ -331,6 +333,61 @@ void MainWindow::initItems()
     PLACE_CHECKBOX(&getMenuInstance().rage.antiAim.zeroOnPeek, ITEM_PATH("Ragebot", "Anti-Aim", "Main"), IS_VISIBLE_DUMMY);
 }
 
+void MainWindow::initLuaItems()
+{
+    auto& items = getMenuInstance().luaItems;
+    for (auto& item : items)
+    {
+        switch (item.itemType)
+        {
+        case ITEM_CHECKBOX:
+            PLACE_CHECKBOX(&std::any_cast<CheckBox&>(item.item), std::forward<itemPath>(item.path), std::forward<isVisibleFn>(item.isVisibleCallback));
+            break;
+        case ITEM_SLIDER_INT:
+            PLACE_SLIDER_INT(&std::any_cast<Slider<int>&>(item.item), std::forward<itemPath>(item.path), std::forward<isVisibleFn>(item.isVisibleCallback));
+            break;
+        case ITEM_SLIDER_FLOAT:
+            PLACE_SLIDER_FLOAT(&std::any_cast<Slider<float>&>(item.item), std::forward<itemPath>(item.path), std::forward<isVisibleFn>(item.isVisibleCallback));
+            break;
+        case ITEM_COMBOBOX:
+            PLACE_COMBO(&std::any_cast<ComboBox&>(item.item), std::forward<itemPath>(item.path), std::forward<isVisibleFn>(item.isVisibleCallback));
+            break;
+        case ITEM_MULTICOMBOBOX:
+            PLACE_MULTICOMBO(&std::any_cast<MultiComboBox&>(item.item), std::forward<itemPath>(item.path), std::forward<isVisibleFn>(item.isVisibleCallback));
+            break;
+        case ITEM_COLOR:
+            PLACE_COLORPICKER(&std::any_cast<ColorPicker&>(item.item), std::forward<itemPath>(item.path), std::forward<isVisibleFn>(item.isVisibleCallback));
+            break;
+        }
+    }
+}
+
+void MainWindow::initLatestLuaItem()
+{
+    auto& item = getMenuInstance().luaItems.back();
+    switch (item.itemType)
+    {
+    case ITEM_CHECKBOX:
+        PLACE_CHECKBOX(&std::any_cast<CheckBox&>(item.item), std::forward<itemPath>(item.path), std::forward<isVisibleFn>(item.isVisibleCallback));
+        break;
+    case ITEM_SLIDER_INT:
+        PLACE_SLIDER_INT(&std::any_cast<Slider<int>&>(item.item), std::forward<itemPath>(item.path), std::forward<isVisibleFn>(item.isVisibleCallback));
+        break;
+    case ITEM_SLIDER_FLOAT:
+        PLACE_SLIDER_FLOAT(&std::any_cast<Slider<float>&>(item.item), std::forward<itemPath>(item.path), std::forward<isVisibleFn>(item.isVisibleCallback));
+        break;
+    case ITEM_COMBOBOX:
+        PLACE_COMBO(&std::any_cast<ComboBox&>(item.item), std::forward<itemPath>(item.path), std::forward<isVisibleFn>(item.isVisibleCallback));
+        break;
+    case ITEM_MULTICOMBOBOX:
+        PLACE_MULTICOMBO(&std::any_cast<MultiComboBox&>(item.item), std::forward<itemPath>(item.path), std::forward<isVisibleFn>(item.isVisibleCallback));
+        break;
+    case ITEM_COLOR:
+        PLACE_COLORPICKER(&std::any_cast<ColorPicker&>(item.item), std::forward<itemPath>(item.path), std::forward<isVisibleFn>(item.isVisibleCallback));
+        break;
+    }
+}
+
 int MainWindow::getMainAlpha()
 {
     return math::toInt(255.f * windowAlpha);
@@ -443,14 +500,17 @@ void MainWindow::updateTabsAnimation()
     tabContentsAnim.yPosAnimation.setCondition(selectedTab.noSubTabs);
     tabContentsAnim.ySizeAnimation.setCondition(selectedTab.noSubTabs);
     tabContentsAnim.yChildSizeAnimation.setCondition(selectedTab.noSubTabs);
+    tabContentsAnim.yChildContentsSizeAnimation.setCondition(selectedTab.noSubTabs);
 
     tabContentsAnim.yPosAnimation.process();
     tabContentsAnim.ySizeAnimation.process();
     tabContentsAnim.yChildSizeAnimation.process();
+    tabContentsAnim.yChildContentsSizeAnimation.process();
 
     tabContentsAnim.yPos = tabContentsAnim.yPosAnimation.getAnimatedValue();
     tabContentsAnim.ySize = tabContentsAnim.ySizeAnimation.getAnimatedValue();
     tabContentsAnim.yChildSize = tabContentsAnim.yChildSizeAnimation.getAnimatedValue();
+    tabContentsAnim.yChildContentsSize = tabContentsAnim.yChildContentsSizeAnimation.getAnimatedValue();
 
     {
         tabContentsAnim.selectedTabAnimation.setCondition(tabSelection == oldTabSelection);
@@ -513,16 +573,23 @@ void MainWindow::renderTabsContents()
         auto currentPos = ImGui::GetWindowPos() + cursorPos;
         auto childSize = ImVec2(484.f, math::toFloat(math::toInt(tabContentsAnim.ySize))) * DPI_SCALE;
 
+        ImGui::PushFont(render::getFont(FONT_ITEMS).font);
         ImGui::BeginChild("MainTabs##bmx09bxoic", childSize, 0, ImGuiWindowFlags_NoBackground);
         {
             auto mainAlpha = getMainAlpha();
             int itemsAlpha = math::toInt(windowAlpha * (tabContentsAnim.selectedTabAnimation.getAnimatedValue() * 0.01f) * 255.f);
 
-            objRender::drawFilledRect(currentPos, childSize, ImColor(18, 18, 18, mainAlpha), 17.f);
+            objRender::drawFilledRect(currentPos, childSize, ImColor(18, 18, 18, mainAlpha), 6.f);
 
             ImVec2 offset = ImVec2(17.f, 17.f) * DPI_SCALE;
             ImVec2 textOffset = ImVec2(19.f, 10.f) * DPI_SCALE;
-            ImVec2 itemsOffset = ImVec2(27.f, 39.f) * DPI_SCALE;
+            ImVec2 childContentsOffset = ImVec2(0.f, 45.f) * DPI_SCALE;
+            ImVec2 itemsOffset = ImVec2(27.f, 18.f) * DPI_SCALE;
+            ImVec2 childBgBorderOffset = ImVec2(1.f, 1.f) * DPI_SCALE;
+
+            float childFirstLineOffset = 40.f * DPI_SCALE;
+            float childSecondLineOffset = 37.f * DPI_SCALE;
+            float childLineHeight = 5.f * DPI_SCALE;
             ImGui::SetCursorPos(offset);
             {
                 const auto defaultSubChildSizeX = 218.f;
@@ -553,7 +620,8 @@ void MainWindow::renderTabsContents()
                             ImGui::BeginChild("Third##bmx09bxoic", groupBoxSize, 0, ImGuiWindowFlags_NoBackground);
                             {
                                 auto currentGroupBoxPos = ImGui::GetWindowPos() + ImGui::GetCursorPos();
-                                objRender::drawFilledRect(currentGroupBoxPos, groupBoxSize, ImColor(33, 33, 33, thirdChildAlpha), 17.f);
+                                objRender::drawFilledRect(currentGroupBoxPos, groupBoxSize, ImColor(33, 33, 33, thirdChildAlpha), 5.f);
+                                objRender::drawRect(currentGroupBoxPos, groupBoxSize, ImColor(56, 56, 56, mainAlpha), 5.f, 0, 2.f);
 
                                 std::string childName = selectedSubTab.has_value() && selectedSubTab->childCount > 2 ? gui::items::getFormattedText(selectedSubTab->childs[2]) : "";
                                 objRender::renderText(render::getFont(FONT_ITEMS), currentGroupBoxPos + textOffset, ImColor(174, 174, 174, thirdChildAlpha), childName.c_str());
@@ -561,11 +629,7 @@ void MainWindow::renderTabsContents()
                                 ImGui::SetCursorPos(itemsOffset);
                                 ImGui::BeginGroup();
                                 {
-                                    ImGui::PushFont(render::getFont(FONT_ITEMS).font);
-                                    {
-                                        renderChildContents(tabSelection, selectedTab.subTabSelection, CHILD_CATEGORY_THIRD);
-                                    }
-                                    ImGui::PopFont();
+                                    renderChildContents(tabSelection, selectedTab.subTabSelection, CHILD_CATEGORY_THIRD);
                                 }
                                 ImGui::EndGroup();
                             }
@@ -579,24 +643,43 @@ void MainWindow::renderTabsContents()
                         if (secondChildAlpha > 0)
                         {
                             ImVec2 groupBoxSize = ImVec2(218.f, math::toFloat(math::toInt(tabContentsAnim.yChildSize * secondChildYMultiplier))) * DPI_SCALE;
+                            ImVec2 groupBoxContentsSize = ImVec2(groupBoxSize.x, math::toFloat(math::toInt(groupBoxSize.y * 0.8f)));
                             ImGui::BeginChild("Second##bmx09bxoic", groupBoxSize, 0, ImGuiWindowFlags_NoBackground);
                             {
                                 auto currentGroupBoxPos = ImGui::GetWindowPos() + ImGui::GetCursorPos();
-                                objRender::drawFilledRect(currentGroupBoxPos, groupBoxSize, ImColor(33, 33, 33, secondChildAlpha), 17.f);
+                                // bg
+                                objRender::drawFilledRect(currentGroupBoxPos, groupBoxSize, ImColor(33, 33, 33, secondChildAlpha), 5.f);
 
                                 std::string childName = selectedSubTab.has_value() && selectedSubTab->childCount > 1 ? gui::items::getFormattedText(selectedSubTab->childs[1]) : "";
                                 objRender::renderText(render::getFont(FONT_ITEMS), currentGroupBoxPos + textOffset, ImColor(174, 174, 174, secondChildAlpha), childName.c_str());
 
-                                ImGui::SetCursorPos(itemsOffset);
+                                ImGui::SetCursorPos(childContentsOffset);
                                 ImGui::BeginGroup();
                                 {
-                                    ImGui::PushFont(render::getFont(FONT_ITEMS).font);
+                                    ImGui::BeginChild("SecondChildContents##bmx09bxoic", groupBoxContentsSize, 0, ImGuiWindowFlags_NoBackground);
                                     {
-                                        renderChildContents(tabSelection, selectedTab.subTabSelection, CHILD_CATEGORY_SECOND);
+                                        auto currentGroupBoxPos = ImGui::GetWindowPos() + ImGui::GetCursorPos();
+                                        objRender::drawFilledRect(currentGroupBoxPos, groupBoxContentsSize, ImColor(25, 25, 25, secondChildAlpha), 0.f);
+
+                                        ImGui::SetCursorPos(itemsOffset);
+                                        ImGui::BeginGroup();
+                                        {
+                                            renderChildContents(tabSelection, selectedTab.subTabSelection, CHILD_CATEGORY_SECOND);
+                                        }
+                                        ImGui::EndGroup();
                                     }
-                                    ImGui::PopFont();
+                                    ImGui::EndChild();
                                 }
                                 ImGui::EndGroup();
+
+                                // border
+                                objRender::drawRect(currentGroupBoxPos - childBgBorderOffset, groupBoxSize + childBgBorderOffset * 2.f, ImColor(56, 56, 56, secondChildAlpha), 5.f, 0, 2.f);
+
+                                // line above name
+                                objRender::drawFilledRect(currentGroupBoxPos + ImVec2(0.f, childFirstLineOffset), ImVec2(groupBoxSize.x, childLineHeight), ImColor(56, 56, 56, secondChildAlpha));
+
+                                // line below child
+                                objRender::drawFilledRect(currentGroupBoxPos + ImVec2(0.f, groupBoxSize.y - childSecondLineOffset), ImVec2(groupBoxSize.x, childLineHeight), ImColor(56, 56, 56, secondChildAlpha));
                             }
                             ImGui::EndChild();
                         }
@@ -605,31 +688,51 @@ void MainWindow::renderTabsContents()
 
                 {
                     ImVec2 groupBoxSize = ImVec2(tabContentsAnim.xChildSize, math::toFloat(math::toInt(tabContentsAnim.yChildSize))) * DPI_SCALE;
+                    ImVec2 groupBoxContentsSize = ImVec2(groupBoxSize.x, math::toFloat(math::toInt(groupBoxSize.y * 0.8f)));
                     ImGui::SetCursorPos(prevCursorPos);
                     ImGui::BeginChild("First##bmx09bxoic", groupBoxSize, 0, ImGuiWindowFlags_NoBackground);
                     {
                         auto currentGroupBoxPos = ImGui::GetWindowPos() + ImGui::GetCursorPos();
-                        objRender::drawFilledRect(currentGroupBoxPos, groupBoxSize, ImColor(33, 33, 33, mainAlpha), 17.f);
+                        // bg
+                        objRender::drawFilledRect(currentGroupBoxPos, groupBoxSize, ImColor(33, 33, 33, mainAlpha), 5.f);
 
                         std::string childName = selectedSubTab.has_value() ? gui::items::getFormattedText(selectedSubTab->childs[0]) : "Main";
                         objRender::renderText(render::getFont(FONT_ITEMS), currentGroupBoxPos + textOffset, ImColor(174, 174, 174, mainAlpha), childName.c_str());
-
-                        ImGui::SetCursorPos(itemsOffset);
+                        
+                        ImGui::SetCursorPos(childContentsOffset);
                         ImGui::BeginGroup();
                         {
-                            ImGui::PushFont(render::getFont(FONT_ITEMS).font);
+                            ImGui::BeginChild("FirstChildContents##bmx09bxoic", groupBoxContentsSize, 0, ImGuiWindowFlags_NoBackground);
                             {
-                                renderChildContents(tabSelection, selectedTab.subTabSelection, CHILD_CATEGORY_FIRST);
+                                auto currentGroupBoxPos = ImGui::GetWindowPos() + ImGui::GetCursorPos();
+                                objRender::drawFilledRect(currentGroupBoxPos, groupBoxContentsSize, ImColor(25, 25, 25, mainAlpha), 0.f);
+
+                                ImGui::SetCursorPos(itemsOffset);
+                                ImGui::BeginGroup();
+                                {
+                                    renderChildContents(tabSelection, selectedTab.subTabSelection, CHILD_CATEGORY_FIRST);
+                                }
+                                ImGui::EndGroup();
                             }
-                            ImGui::PopFont();
+                            ImGui::EndChild();
                         }
                         ImGui::EndGroup();
+
+                        // border
+                        objRender::drawRect(currentGroupBoxPos - childBgBorderOffset, groupBoxSize + childBgBorderOffset * 2.f, ImColor(56, 56, 56, mainAlpha), 5.f, 0, 2.f);
+
+                        // line above name
+                        objRender::drawFilledRect(currentGroupBoxPos + ImVec2(0.f, childFirstLineOffset), ImVec2(groupBoxSize.x, childLineHeight), ImColor(56, 56, 56, mainAlpha));
+
+                        // line below child
+                        objRender::drawFilledRect(currentGroupBoxPos + ImVec2(0.f, groupBoxSize.y - childSecondLineOffset), ImVec2(groupBoxSize.x, childLineHeight), ImColor(56, 56, 56, mainAlpha));
                     }
                     ImGui::EndChild();
                 }
             }
         }
         ImGui::EndChild();
+        ImGui::PopFont();
     }
     ImGui::EndGroup();
 }
@@ -647,6 +750,11 @@ void MainWindow::init()
 {
     tabSelectionAnim.yPos = 0.f;
     tabSelectionAnim.xPos = 0.f;
+}
+
+void MainWindow::reload()
+{
+    initLuaItems();
 }
 
 void MainWindow::render()
@@ -673,6 +781,8 @@ void MainWindow::render()
 
     std::string uiName = name + "##bmx09bxoic";
 
+    auto drawList = objRender::getDrawList();
+
     ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0, 0, 0, 0));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 17.f);
     ImGui::PushStyleVar(ImGuiStyleVar_Alpha, windowAlpha);
@@ -686,7 +796,7 @@ void MainWindow::render()
 
         // background
         {
-            objRender::drawFilledRect(pos, size, ImColor(33, 33, 33, getMainAlpha()), 17.f);
+            objRender::drawFilledRect(pos, size, ImColor(33, 33, 33, getMainAlpha()), 6.f);
 
             // main ui (name, items, info)
             renderWindowContents();
@@ -700,8 +810,8 @@ void MainWindow::render()
 
             const int maxShadowRange = math::toInt(10.f * DPI_SCALE);
             ImColor shadowColor = ImColor(0, 0, 0, getMainAlpha());
-            objRender::drawRectShadow(pos - shadowBorderOffset, size + shadowBorderOffset * 2, std::forward<ImColor>(shadowColor), maxShadowRange, 45.f, 17.f);
-            objRender::drawRect(pos - borderOffset, size + borderOffset, ImColor(33, 33, 33, borderBgAlpha), 17.f);
+            objRender::drawRectShadow(pos - shadowBorderOffset, size + shadowBorderOffset * 2, std::forward<ImColor>(shadowColor), maxShadowRange, 45.f, 6.f);
+            objRender::drawRect(pos - borderOffset, size + borderOffset, ImColor(33, 33, 33, borderBgAlpha), 6.f);
         }
     }
     ImGui::End();

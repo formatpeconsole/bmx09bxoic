@@ -75,6 +75,7 @@ struct tabContentsAnimation
     float ySize{};
     float xChildSize{};
     float yChildSize{};
+    float yChildContentsSize{};
     float ySubChildFactor{};
     float subChildsAlpha[2]{};
 
@@ -82,6 +83,7 @@ struct tabContentsAnimation
     render::Animation ySizeAnimation{ 444.f, 477.f, 0.35f, render::ANIMATION_EASE_OUT_EXPO };
     render::Animation xChildSizeAnimation{ 219.f, 451.f, 0.3f, render::ANIMATION_EASE_OUT_EXPO };
     render::Animation yChildSizeAnimation{ 410.f, 443.f, 0.35f, render::ANIMATION_EASE_OUT_EXPO };
+    render::Animation yChildContentsSizeAnimation{ 345.f, 378.f, 0.35f, render::ANIMATION_EASE_OUT_EXPO };
     render::Animation selectedTabAnimation{ 0.f, 100.f, 0.35f, render::ANIMATION_EASE_OUT_EXPO, render::ANIMATION_FLAGS_REPLAY_FROM_START };
     render::Animation ySubChildFactorAnimation{ 100.f, 50.f, 0.35f, render::ANIMATION_EASE_OUT_EXPO };
     render::Animation subChildsAlphaAnimation[2]{
@@ -129,6 +131,7 @@ public:
     ~MainWindow();
 
     void init() override;
+    void reload() override;
     void render() override;
     void updateWindowPosOrSize() override;
     std::string getName() override;
@@ -137,6 +140,8 @@ public:
 
 private:
     void initItems();
+    void initLuaItems();
+    void initLatestLuaItem();
     void renderItem(const baseItemPtr& baseItem, const RealItemPath& currentItemPath);
     void renderChildContents(int selection, int subTabSelection, int childType);
     void updateTabsAnimation();
@@ -146,7 +151,7 @@ private:
     void renderLogo();
     void renderBottomInfo();
 
-    std::optional<RealItemPath> getRealItemPath(luaItemPath & path);
+    std::optional<RealItemPath> getRealItemPath(itemPath& path);
 
     std::string getBuildType();
     std::string getBuildDate();
@@ -154,12 +159,12 @@ private:
     int getMainAlpha();
 
     template<typename T>
-    void placeItem(T* ptr, luaItemPath&& path, isVisibleFn&& isVisible)
+    void placeItem(T* ptr, itemPath&& path, isVisibleFn&& isVisible)
     {
-        luaItemPath itemPath{ std::forward<luaItemPath>(path) };
-        itemPath.emplace_back(gui::items::getFormattedText(ptr->item.name));
+        itemPath newPath{ std::forward<itemPath>(path) };
+        newPath.emplace_back(gui::items::getFormattedText(ptr->item.name));
 
-        auto realItemPath = getRealItemPath(itemPath);
+        auto realItemPath = getRealItemPath(newPath);
         if (!realItemPath.has_value())
         {
 #ifdef _DEBUG
@@ -168,7 +173,7 @@ private:
 #endif
             return;
         }
-        items.emplace_back(std::make_shared<UiItem<T>>(ptr, realItemPath.value(), itemPath, std::forward<isVisibleFn>(isVisible)));
+        items.emplace_back(std::make_shared<UiItem<T>>(ptr, realItemPath.value(), newPath, std::forward<isVisibleFn>(isVisible)));
     }
 
     itemsList items{};

@@ -23,6 +23,7 @@ class IWindow
 {
 public:
     virtual void init() = 0;
+    virtual void reload() = 0;
     virtual void render() = 0;
     virtual void updateWindowPosOrSize() = 0;
     virtual std::string getName() = 0;

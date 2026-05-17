@@ -20,8 +20,8 @@ using namespace items;
 // checkbox "Enable" that located at "Ragebot->Aimbot->Main(groupbox)"
 // full key will look like:
 // ragebot-aimbot-main-enable
-using luaItemPath = std::vector<std::string>;
-inline fnv64Hash getLuaItemKey(luaItemPath path)
+using itemPath = std::vector<std::string>;
+inline fnv64Hash getLuaItemKey(itemPath path)
 {
     std::string key{};
     bool first = true;
@@ -46,7 +46,7 @@ inline fnv64Hash getLuaItemKey(luaItemPath path)
 // checkbox "Enable" that located at "Ragebot->Aimbot->Main(groupbox)"
 // full key will look like:
 // "Ragebot", "Aimbot", "Main", "Enable"
-inline std::string getLuaItemPath(luaItemPath path)
+inline std::string getLuaItemPath(itemPath path)
 {
     std::ostringstream oss{};
     bool first = true;
@@ -96,8 +96,8 @@ template<typename T>
 class UiItem : public BaseItem
 {
 public:
-    UiItem(T* itemPtr, RealItemPath realItemPath, luaItemPath luaItemPath, isVisibleFn&& visibleCallback)
-        : luaPath(luaItemPath), realItemPath(realItemPath), 
+    UiItem(T* itemPtr, RealItemPath realItemPath, itemPath path, isVisibleFn&& visibleCallback)
+        : path(path), realItemPath(realItemPath),
         itemPtr(itemPtr), itemType(itemPtr->item.itemType),
         visibleCallback(std::forward<isVisibleFn>(visibleCallback)) {}
 
@@ -126,8 +126,8 @@ public:
 
     void createKey() override
     {
-        luaItemKey.path = getLuaItemPath(luaPath);
-        luaItemKey.hash = getLuaItemKey(luaPath);
+        luaItemKey.path = getLuaItemPath(path);
+        luaItemKey.hash = getLuaItemKey(path);
     }
 
     fnv64Hash getLuaKey() override
@@ -141,7 +141,7 @@ public:
     }
 
 private:
-    luaItemPath luaPath{};
+    itemPath path{};
     RealItemPath realItemPath{};
     LuaItemKey luaItemKey{};
     isVisibleFn visibleCallback{};

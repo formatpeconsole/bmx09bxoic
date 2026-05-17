@@ -10,6 +10,7 @@ public:
         : name(name), size(size), prevDpiScale(1.f), prevBindCount(0) {}
 
     void init() override;
+    void reload() override {}
     void render() override;
     void updateWindowPosOrSize() override;
 
@@ -18,7 +19,7 @@ public:
     ImVec2 getWindowSize() override;
 
 private:
-    std::unordered_map<void*, std::pair<void*, int>> items{};
+    std::unordered_map<uintptr_t, std::pair<uintptr_t, int>> items{};
     std::string name{};
     ImVec2 pos{};
     ImVec2 size{};

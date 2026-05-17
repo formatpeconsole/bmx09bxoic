@@ -26,6 +26,7 @@ enum DPI_SCALE_AMOUNT
 void init()
 {
     getMenuInstance().initConfig();
+    getMenuInstance().addItemsToBindList();
     getMenuInstance().initWindows();
     binds::initBinds();
 }
@@ -244,7 +245,13 @@ void Menu::initConfig()
         rage.config[i].preferBody = MAKE_CHECKBOX_RT("Prefer Body##rage" + index, false);
         rage.config[i].quickStop = MAKE_MULTICOMBO_RT("Quick Stop##rage" + index, 0, COMBO_LIST("Early", "Between Shots", "In Air", "Ignore Molotov"));
         rage.config[i].overrideGlobal = MAKE_CHECKBOX_RT("Override Global##rage" + index, false);
+    }
+}
 
+void Menu::addItemsToBindList()
+{
+    for (int i = 0; i < MAX_CONFIGS; ++i)
+    {
         itemsInMemory.emplace_back(ITEM_PTR_RT(rage.config[i].autoFire));
         itemsInMemory.emplace_back(ITEM_PTR_RT(rage.config[i].autoScope));
         itemsInMemory.emplace_back(ITEM_PTR_RT(rage.config[i].fov));
@@ -265,4 +272,42 @@ void Menu::initConfig()
     itemsInMemory.emplace_back(ITEM_PTR_RT(rage.duckPeekAssist));
     itemsInMemory.emplace_back(ITEM_PTR_RT(rage.configSelect));
 }
+
+void Menu::processLuaItem(luaItem& item)
+{
+    switch (item.itemType)
+    {
+    case ITEM_CHECKBOX:
+        itemsInMemory.emplace_back(ITEM_PTR_RT(std::any_cast<CheckBox&>(item.item)));
+        break;
+    case ITEM_SLIDER_INT:
+        itemsInMemory.emplace_back(ITEM_PTR_RT(std::any_cast<Slider<int>&>(item.item)));
+        break;
+    case ITEM_SLIDER_FLOAT:
+        itemsInMemory.emplace_back(ITEM_PTR_RT(std::any_cast<Slider<float>&>(item.item)));
+        break;
+    case ITEM_COMBOBOX:
+        itemsInMemory.emplace_back(ITEM_PTR_RT(std::any_cast<ComboBox&>(item.item)));
+        break;
+    case ITEM_MULTICOMBOBOX:
+        itemsInMemory.emplace_back(ITEM_PTR_RT(std::any_cast<MultiComboBox&>(item.item)));
+        break;
+    case ITEM_COLOR:
+        itemsInMemory.emplace_back(ITEM_PTR_RT(std::any_cast<ColorPicker&>(item.item)));
+        break;
+    }
+}
+
+void Menu::addLuaItemsToBindList()
+{
+    for (auto& item : luaItems)
+        processLuaItem(item);
+}
+
+void Menu::addLatestLuaItemToBindList()
+{
+    auto& latestItem = luaItems.back();
+    processLuaItem(latestItem);
+}
+
 }

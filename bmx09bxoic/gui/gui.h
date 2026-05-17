@@ -7,10 +7,12 @@
 #include <algorithm>
 #include <unordered_map>
 #include <any>
+#include <queue>
 
 #include "../render/render.h"
 #include "binds/binds.h"
 #include "framework/window.h"
+#include "framework/items.h"
 #include "item.h"
 
 #undef min
@@ -40,8 +42,8 @@
 #define MAKE_MULTICOMBO(name, itemName, defaultValue, list) MultiComboBox name{ PUT_ITEM_DATA(itemName, defaultValue, ITEM_MULTICOMBOBOX, list) }
 #define MAKE_MULTICOMBO_RT(itemName, defaultValue, list) MultiComboBox { PUT_ITEM_DATA(itemName, defaultValue, ITEM_MULTICOMBOBOX, list) }
 
-#define ITEM_PTR(name) { reinterpret_cast<void*>(&name.item), name.item.itemType }
-#define ITEM_PTR_RT(name) std::make_pair(reinterpret_cast<void*>(&name.item), name.item.itemType)
+#define ITEM_PTR(name) { reinterpret_cast<uintptr_t>(&name.item), name.item.itemType }
+#define ITEM_PTR_RT(name) std::make_pair(reinterpret_cast<uintptr_t>(&name.item), name.item.itemType)
 
 // global
 // scar20
@@ -58,6 +60,7 @@ namespace gui
 {
 using namespace binds;
 using namespace items;
+using namespace framework;
 
 struct RageTab
 {
@@ -132,7 +135,16 @@ struct RageTab
     AntiAim antiAim{};
 };
 
-using itemsInMemoryList = std::list<std::pair<void*, int>>;
+struct luaItem
+{
+    std::optional<std::function<bool()>> isVisibleCallback{};
+    itemPath path{};
+    std::any item;
+    int itemType;
+};
+
+using luaItemsList = std::list<luaItem>;
+using itemsInMemoryList = std::list<std::pair<uintptr_t, int>>;
 
 using windowPosSizeAndScale = std::tuple<ImVec2, ImVec2, float>;
 using windowInfo = std::pair<std::string, windowPosSizeAndScale>;
@@ -172,7 +184,13 @@ struct Menu
     KeyBindManager keyBindManager{};
     WindowsManager windowsManager{};
 
+    luaItemsList luaItems{};
+
     void initConfig();
+    void processLuaItem(luaItem& item);
+    void addItemsToBindList();
+    void addLuaItemsToBindList();
+    void addLatestLuaItemToBindList();
     void initWindows();
     void renderWindows();
     void destroyWindows();
