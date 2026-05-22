@@ -135,15 +135,6 @@ struct RageTab
     AntiAim antiAim{};
 };
 
-struct luaItem
-{
-    std::optional<std::function<bool()>> isVisibleCallback{};
-    itemPath path{};
-    std::any item;
-    int itemType;
-};
-
-using luaItemsList = std::list<luaItem>;
 using itemsInMemoryList = std::list<std::pair<uintptr_t, int>>;
 
 using windowPosSizeAndScale = std::tuple<ImVec2, ImVec2, float>;
@@ -184,13 +175,7 @@ struct Menu
     KeyBindManager keyBindManager{};
     WindowsManager windowsManager{};
 
-    luaItemsList luaItems{};
-
     void initConfig();
-    void processLuaItem(luaItem& item);
-    void addItemsToBindList();
-    void addLuaItemsToBindList();
-    void addLatestLuaItemToBindList();
     void initWindows();
     void renderWindows();
     void destroyWindows();

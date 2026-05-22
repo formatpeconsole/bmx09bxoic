@@ -120,6 +120,7 @@ void loadConfig()
             LOAD_ITEM(rageSection, instance.rage.config[i].autoFire);
             LOAD_ITEM(rageSection, instance.rage.config[i].autoScope);
             LOAD_ITEM(rageSection, instance.rage.config[i].fov);
+            LOAD_ITEM(rageSection, instance.rage.config[i].hitBoxes);
             LOAD_ITEM(rageSection, instance.rage.config[i].multiPoints);
             LOAD_ITEM(rageSection, instance.rage.config[i].pointHeadScale);
             LOAD_ITEM(rageSection, instance.rage.config[i].pointBodyScale);
@@ -136,35 +137,6 @@ void loadConfig()
         LOAD_ITEM(rageSection, instance.rage.noSpread);
         LOAD_ITEM(rageSection, instance.rage.duckPeekAssist);
         LOAD_ITEM(rageSection, instance.rage.configSelect);
-    }
-
-    auto& luaSection = jsonResult["Lua"];
-    if (!luaSection.empty())
-    {
-        for (auto item : instance.luaItems)
-        {
-            switch (item.itemType)
-            {
-            case ITEM_CHECKBOX:
-                LOAD_ITEM(luaSection, std::any_cast<CheckBox&>(item.item));
-                break;
-            case ITEM_SLIDER_INT:
-                LOAD_ITEM(luaSection, std::any_cast<Slider<int>&>(item.item));
-                break;
-            case ITEM_SLIDER_FLOAT:
-                LOAD_ITEM(luaSection, std::any_cast<Slider<float>&>(item.item));
-                break;
-            case ITEM_COMBOBOX:
-                LOAD_ITEM(luaSection, std::any_cast<ComboBox&>(item.item));
-                break;
-            case ITEM_MULTICOMBOBOX:
-                LOAD_ITEM(luaSection, std::any_cast<MultiComboBox&>(item.item));
-                break;
-            case ITEM_COLOR:
-                LOAD_ITEM(luaSection, std::any_cast<ColorPicker&>(item.item));
-                break;
-            }
-        }
     }
 }
 
@@ -199,34 +171,6 @@ void saveConfig()
         SAVE_ITEM(rageSection, instance.rage.noSpread);
         SAVE_ITEM(rageSection, instance.rage.duckPeekAssist);
         SAVE_ITEM(rageSection, instance.rage.configSelect);
-    }
-
-    auto& luaSection = jsonToWrite["Lua"];
-    {
-        for (auto item : instance.luaItems)
-        {
-            switch (item.itemType)
-            {
-            case ITEM_CHECKBOX:
-                SAVE_ITEM(luaSection, std::any_cast<CheckBox>(item.item));
-                break;
-            case ITEM_SLIDER_INT:
-                SAVE_ITEM(luaSection, std::any_cast<Slider<int>>(item.item));
-                break;
-            case ITEM_SLIDER_FLOAT:
-                SAVE_ITEM(luaSection, std::any_cast<Slider<float>>(item.item));
-                break;
-            case ITEM_COMBOBOX:
-                SAVE_ITEM(luaSection, std::any_cast<ComboBox>(item.item));
-                break;
-            case ITEM_MULTICOMBOBOX:
-                SAVE_ITEM(luaSection, std::any_cast<MultiComboBox>(item.item));
-                break;
-            case ITEM_COLOR:
-                SAVE_ITEM(luaSection, std::any_cast<ColorPicker>(item.item));
-                break;
-            }
-        }
     }
 
     configFile << jsonToWrite;

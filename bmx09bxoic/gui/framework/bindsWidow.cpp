@@ -6,22 +6,22 @@ namespace gui::framework
 {
 using namespace items;
 
-uintptr_t getItemValuePointerFromItemPointer(uintptr_t ptr, int type)
+void* getItemValuePointerFromItemPointer(uintptr_t ptr, int type)
 {
     switch (type)
     {
     case ITEM_CHECKBOX:
-        return reinterpret_cast<uintptr_t>(& reinterpret_cast<Item<bool>*>(ptr)->value);
+        return &reinterpret_cast<Item<bool>*>(ptr)->value;
     case ITEM_SLIDER_INT:
-        return reinterpret_cast<uintptr_t>(&reinterpret_cast<Item<int>*>(ptr)->value);
+        return &reinterpret_cast<Item<int>*>(ptr)->value;
     case ITEM_SLIDER_FLOAT:
-        return reinterpret_cast<uintptr_t>(&reinterpret_cast<Item<float>*>(ptr)->value);
+        return &reinterpret_cast<Item<float>*>(ptr)->value;
     case ITEM_COMBOBOX:
-        return reinterpret_cast<uintptr_t>(&reinterpret_cast<Item<int>*>(ptr)->value);
+        return &reinterpret_cast<Item<int>*>(ptr)->value;
     case ITEM_MULTICOMBOBOX:
-        return reinterpret_cast<uintptr_t>(&reinterpret_cast<Item<unsigned int>*>(ptr)->value);
+        return &reinterpret_cast<Item<unsigned int>*>(ptr)->value;
     case ITEM_COLOR:
-        return reinterpret_cast<uintptr_t>(&reinterpret_cast<Item<unsigned int>*>(ptr)->value);
+        return &reinterpret_cast<Item<unsigned int>*>(ptr)->value;
     default:
         return {};
     }

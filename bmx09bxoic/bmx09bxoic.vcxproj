@@ -116,7 +116,6 @@
     <ClCompile Include="gui\binds\binds.cpp" />
     <ClCompile Include="gui\binds\utils.cpp" />
     <ClCompile Include="gui\framework\bindsWidow.cpp" />
-    <ClCompile Include="gui\framework\items.cpp" />
     <ClCompile Include="gui\framework\mainWindow.cpp" />
     <ClCompile Include="render\animation\animation.cpp" />
     <ClCompile Include="gui\gui.cpp" />

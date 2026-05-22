@@ -114,7 +114,8 @@ void init(IDXGISwapChain* pSwapChain)
     config.OversampleV = 3;
 
     getRenderInfoInstance().fonts[FONT_LOGO] = makeFont(io.Fonts, config, CheatFont_compressed_data, CheatFont_compressed_size, 33.f * DPI_SCALE);
-    getRenderInfoInstance().fonts[FONT_ITEMS] = makeFont(io.Fonts, config, CheatFont_compressed_data, CheatFont_compressed_size, 20.f * DPI_SCALE);
+    getRenderInfoInstance().fonts[FONT_ITEMS_BIG] = makeFont(io.Fonts, config, CheatFont_compressed_data, CheatFont_compressed_size, 20.f * DPI_SCALE);
+    getRenderInfoInstance().fonts[FONT_ITEMS] = makeFont(io.Fonts, config, CheatFont_compressed_data, CheatFont_compressed_size, 18.f * DPI_SCALE);
     getRenderInfoInstance().fonts[FONT_WATERMARK] = makeFont(io.Fonts, config, CheatFont_compressed_data, CheatFont_compressed_size, 20.f * DPI_SCALE);
     getRenderInfoInstance().fonts[FONT_INFO] = makeFont(io.Fonts, config, CheatFont_compressed_data, CheatFont_compressed_size, 20.f * DPI_SCALE);
 

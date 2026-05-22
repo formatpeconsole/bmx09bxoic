@@ -10,6 +10,7 @@
 enum FONTS
 {
     FONT_LOGO = 0,
+    FONT_ITEMS_BIG,
     FONT_ITEMS,
     FONT_WATERMARK,
     FONT_INFO,

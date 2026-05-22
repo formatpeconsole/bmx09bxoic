@@ -34,7 +34,6 @@
     <ClCompile Include="render\animation\animation.cpp" />
     <ClCompile Include="clock\clock.cpp" />
     <ClCompile Include="cheat-base\defines.cpp" />
-    <ClCompile Include="gui\framework\items.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="threadpool\threadpool.h" />

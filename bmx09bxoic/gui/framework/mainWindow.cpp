@@ -207,7 +207,7 @@ ImVec4 interpolateWithoutAlpha(const ImVec4& start, const ImVec4& end, float ste
     }
 }
 
-bool tabButton(const char* name, const char* formattedName, ImVec2 sizeArg, bool active, tabAnimation& animation, int mainAlpha)
+bool tabButton(const char* name, const char* formattedName, ImVec2 sizeArg, bool active, tabAnimation& animation, int mainAlpha, bool squareShape = false)
 {
     ImGuiWindow* window = ImGui::GetCurrentWindow();
     ImGuiContext& g = *GImGui;
@@ -254,13 +254,21 @@ bool tabButton(const char* name, const char* formattedName, ImVec2 sizeArg, bool
         {
             ImColor radioColor = animation.radioButton;
             radioColor.Value.w *= animation.radioGlowAlpha;
+
             objRender::drawCircleShadow(basePos, 3.5f * DPI_SCALE, std::forward<ImColor>(radioColor), 20, 15.f);
         }
 
-        objRender::drawCircleFilled(basePos, 3.5f * DPI_SCALE, ImColor(animation.radioButton));
+        if (squareShape)
+        {
+            auto rectSize = ImVec2(7.f, 7.f) * DPI_SCALE;
+            auto rectPos = pos + ImVec2(0.f, 6.f) * DPI_SCALE;
+            objRender::drawFilledRect(rectPos, rectSize, ImColor(animation.radioButton));
+        }
+        else
+            objRender::drawCircleFilled(basePos, 3.5f * DPI_SCALE, ImColor(animation.radioButton));
 
         auto textPos = pos + ImVec2(21.f, 0.f) * DPI_SCALE;
-        objRender::renderText(render::getFont(FONT_ITEMS), textPos, ImColor(animation.text), formattedName);
+        objRender::renderText(render::getFont(FONT_ITEMS_BIG), textPos, ImColor(animation.text), formattedName);
     }
 
     return pressed;
@@ -280,7 +288,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::initItems()
 {
-    //PLACE_COMBO(&getMenuInstance().rage.configSelect, ITEM_PATH( "Ragebot", "Aimbot", "Main" ), IS_VISIBLE_DUMMY);
+    PLACE_COMBO(&getMenuInstance().rage.configSelect, ITEM_PATH( "Ragebot", "Aimbot", "Main" ), IS_VISIBLE_DUMMY);
     PLACE_CHECKBOX(&getMenuInstance().rage.enable, ITEM_PATH( "Ragebot", "Aimbot", "Main" ), IS_VISIBLE_DUMMY);
     PLACE_CHECKBOX(&getMenuInstance().rage.autoRevolver, ITEM_PATH( "Ragebot", "Aimbot", "Main" ), IS_VISIBLE_DUMMY);
     PLACE_CHECKBOX(&getMenuInstance().rage.doubleTap, ITEM_PATH( "Ragebot", "Aimbot", "Main" ), IS_VISIBLE_DUMMY);
@@ -340,61 +348,6 @@ void MainWindow::initItems()
     PLACE_CHECKBOX(&getMenuInstance().rage.antiAim.zeroOnPeek, ITEM_PATH("Ragebot", "Anti-Aim", "Main"), IS_VISIBLE_DUMMY);
 }
 
-void MainWindow::initLuaItems()
-{
-    auto& items = getMenuInstance().luaItems;
-    for (auto& item : items)
-    {
-        switch (item.itemType)
-        {
-        case ITEM_CHECKBOX:
-            PLACE_CHECKBOX(&std::any_cast<CheckBox&>(item.item), std::forward<itemPath>(item.path), std::forward<isVisibleFn>(item.isVisibleCallback));
-            break;
-        case ITEM_SLIDER_INT:
-            PLACE_SLIDER_INT(&std::any_cast<Slider<int>&>(item.item), std::forward<itemPath>(item.path), std::forward<isVisibleFn>(item.isVisibleCallback));
-            break;
-        case ITEM_SLIDER_FLOAT:
-            PLACE_SLIDER_FLOAT(&std::any_cast<Slider<float>&>(item.item), std::forward<itemPath>(item.path), std::forward<isVisibleFn>(item.isVisibleCallback));
-            break;
-        case ITEM_COMBOBOX:
-            PLACE_COMBO(&std::any_cast<ComboBox&>(item.item), std::forward<itemPath>(item.path), std::forward<isVisibleFn>(item.isVisibleCallback));
-            break;
-        case ITEM_MULTICOMBOBOX:
-            PLACE_MULTICOMBO(&std::any_cast<MultiComboBox&>(item.item), std::forward<itemPath>(item.path), std::forward<isVisibleFn>(item.isVisibleCallback));
-            break;
-        case ITEM_COLOR:
-            PLACE_COLORPICKER(&std::any_cast<ColorPicker&>(item.item), std::forward<itemPath>(item.path), std::forward<isVisibleFn>(item.isVisibleCallback));
-            break;
-        }
-    }
-}
-
-void MainWindow::initLatestLuaItem()
-{
-    auto& item = getMenuInstance().luaItems.back();
-    switch (item.itemType)
-    {
-    case ITEM_CHECKBOX:
-        PLACE_CHECKBOX(&std::any_cast<CheckBox&>(item.item), std::forward<itemPath>(item.path), std::forward<isVisibleFn>(item.isVisibleCallback));
-        break;
-    case ITEM_SLIDER_INT:
-        PLACE_SLIDER_INT(&std::any_cast<Slider<int>&>(item.item), std::forward<itemPath>(item.path), std::forward<isVisibleFn>(item.isVisibleCallback));
-        break;
-    case ITEM_SLIDER_FLOAT:
-        PLACE_SLIDER_FLOAT(&std::any_cast<Slider<float>&>(item.item), std::forward<itemPath>(item.path), std::forward<isVisibleFn>(item.isVisibleCallback));
-        break;
-    case ITEM_COMBOBOX:
-        PLACE_COMBO(&std::any_cast<ComboBox&>(item.item), std::forward<itemPath>(item.path), std::forward<isVisibleFn>(item.isVisibleCallback));
-        break;
-    case ITEM_MULTICOMBOBOX:
-        PLACE_MULTICOMBO(&std::any_cast<MultiComboBox&>(item.item), std::forward<itemPath>(item.path), std::forward<isVisibleFn>(item.isVisibleCallback));
-        break;
-    case ITEM_COLOR:
-        PLACE_COLORPICKER(&std::any_cast<ColorPicker&>(item.item), std::forward<itemPath>(item.path), std::forward<isVisibleFn>(item.isVisibleCallback));
-        break;
-    }
-}
-
 int MainWindow::getMainAlpha()
 {
     return math::toInt(255.f * windowAlpha);
@@ -414,14 +367,6 @@ std::string MainWindow::getBuildDate()
     return __DATE__;
 }
 
-void MainWindow::renderLogo()
-{
-    auto pos = ImGui::GetWindowPos();
-    ImVec2 logoPos = pos + mainPos.logo * DPI_SCALE;
-
-    objRender::renderText(render::getFont(FONT_LOGO), logoPos, ImColor(255, 255, 255, getMainAlpha()), name.c_str());
-}
-
 void MainWindow::renderBottomInfo()
 {
     auto pos = ImGui::GetWindowPos();
@@ -437,7 +382,7 @@ void MainWindow::renderTabs()
     ImGui::SetCursorPos(mainPos.baseTabs * DPI_SCALE);
     ImGui::BeginGroup();
     {
-        ImGui::PushFont(render::getFont(FONT_ITEMS).font);
+        ImGui::PushFont(render::getFont(FONT_ITEMS_BIG).font);
 
         int mainAlpha = getMainAlpha();
 
@@ -543,7 +488,7 @@ void MainWindow::renderTabsContents()
     ImGui::SetCursorPos(subTabsCursorPos);
     ImGui::BeginGroup();
     {
-        ImGui::PushFont(render::getFont(FONT_ITEMS).font);
+        ImGui::PushFont(render::getFont(FONT_ITEMS_BIG).font);
         
         int mainAlpha = math::toInt(windowAlpha * (tabContentsAnim.selectedTabAnimation.getAnimatedValue() * 0.01f) * 255.f);
 
@@ -559,7 +504,7 @@ void MainWindow::renderTabsContents()
             auto formattedName = gui::items::getFormattedText(tabName);
             float buttonXSize = math::toFloat(formattedName.length() * 11) * DPI_SCALE;
             if (tabButton(tabName.c_str(), formattedName.c_str(), ImVec2(buttonXSize, buttonYSize),
-                i == selectedTab.subTabSelection, selectedTab.subTabs[i].tabAnim, mainAlpha))
+                i == selectedTab.subTabSelection, selectedTab.subTabs[i].tabAnim, mainAlpha, true))
                 selectedTab.subTabSelection = i;
 
             basicSpacing += (buttonXSize + buttonXSpacing);
@@ -575,7 +520,7 @@ void MainWindow::renderTabsContents()
     ImGui::BeginGroup();
     {
         auto currentPos = ImGui::GetWindowPos() + cursorPos;
-        auto childSize = ImVec2(484.f, math::toFloat(math::toInt(tabContentsAnim.ySize))) * DPI_SCALE;
+        auto childSize = ImVec2(479.f, math::toFloat(math::toInt(tabContentsAnim.ySize))) * DPI_SCALE;
 
         ImGui::PushFont(render::getFont(FONT_ITEMS).font);
         ImGui::BeginGroup();
@@ -583,15 +528,15 @@ void MainWindow::renderTabsContents()
             auto mainAlpha = getMainAlpha();
             int itemsAlpha = math::toInt(windowAlpha * (tabContentsAnim.selectedTabAnimation.getAnimatedValue() * 0.01f) * 255.f);
 
-            objRender::drawFilledRect(currentPos, childSize, ImColor(18, 18, 18, mainAlpha), CHILD_ROUNDING);
+            objRender::drawFilledRect(currentPos, childSize, ImColor(6, 6, 6, mainAlpha), CHILD_ROUNDING);
 
             // those offsets are supposed to render contents
             // depends on UI layout in Figma 
             // NOTE: it have some differences and some pixel offsets are increased
-            ImVec2 offset = ImVec2(17.f, 17.f) * DPI_SCALE;
+            ImVec2 offset = ImVec2(14.f, 14.f) * DPI_SCALE;
             ImVec2 textOffset = ImVec2(19.f, 10.f) * DPI_SCALE;
             ImVec2 childContentsOffset = ImVec2(0.f, 35.f) * DPI_SCALE;
-            ImVec2 itemsOffset = ImVec2(27.f, 4.f) * DPI_SCALE;
+            ImVec2 itemsOffset = ImVec2(33.f, 4.f) * DPI_SCALE;
             ImVec2 childBgBorderOffset = ImVec2(1.f, 1.f) * DPI_SCALE;
 
             float childFirstLineOffset = 35.f * DPI_SCALE;
@@ -662,7 +607,7 @@ void MainWindow::renderTabsContents()
                                 auto currentGroupBoxPos = ImGui::GetWindowPos() + ImGui::GetCursorPos();
 
                                 // bg
-                                objRender::drawFilledRect(currentGroupBoxPos, groupBoxSize, ImColor(33, 33, 33, thirdChildAlpha), CONTENTS_ROUNDING);
+                                objRender::drawFilledRect(currentGroupBoxPos, groupBoxSize, ImColor(0, 0, 0, thirdChildAlpha), CONTENTS_ROUNDING);
 
                                 std::string childName = selectedSubTab.has_value() && selectedSubTab->childCount > 2 ? gui::items::getFormattedText(selectedSubTab->childs[2]) : "";
                                 objRender::renderText(render::getFont(FONT_ITEMS), currentGroupBoxPos + textOffset, ImColor(174, 174, 174, thirdChildAlpha), childName.c_str());
@@ -707,7 +652,7 @@ void MainWindow::renderTabsContents()
                                 auto currentGroupBoxPos = ImGui::GetWindowPos() + ImGui::GetCursorPos();
 
                                 // bg
-                                objRender::drawFilledRect(currentGroupBoxPos, groupBoxSize, ImColor(33, 33, 33, secondChildAlpha), CONTENTS_ROUNDING);
+                                objRender::drawFilledRect(currentGroupBoxPos, groupBoxSize, ImColor(0, 0, 0, secondChildAlpha), CONTENTS_ROUNDING);
 
                                 std::string childName = selectedSubTab.has_value() && selectedSubTab->childCount > 1 ? gui::items::getFormattedText(selectedSubTab->childs[1]) : "";
                                 objRender::renderText(render::getFont(FONT_ITEMS), currentGroupBoxPos + textOffset, ImColor(174, 174, 174, secondChildAlpha), childName.c_str());
@@ -748,7 +693,7 @@ void MainWindow::renderTabsContents()
                         auto currentGroupBoxPos = ImGui::GetWindowPos() + ImGui::GetCursorPos();
 
                         // bg
-                        objRender::drawFilledRect(currentGroupBoxPos, groupBoxSize, ImColor(33, 33, 33, mainAlpha), CONTENTS_ROUNDING);
+                        objRender::drawFilledRect(currentGroupBoxPos, groupBoxSize, ImColor(0, 0, 0, mainAlpha), CONTENTS_ROUNDING);
 
                         std::string childName = selectedSubTab.has_value() ? gui::items::getFormattedText(selectedSubTab->childs[0]) : "Main";
                         objRender::renderText(render::getFont(FONT_ITEMS), currentGroupBoxPos + textOffset, ImColor(174, 174, 174, mainAlpha), childName.c_str());
@@ -788,8 +733,6 @@ void MainWindow::renderWindowContents()
 {
     renderTabs();
     renderTabsContents();
-
-    renderLogo();
     renderBottomInfo();
 }
 
@@ -797,11 +740,6 @@ void MainWindow::init()
 {
     tabSelectionAnim.yPos = 0.f;
     tabSelectionAnim.xPos = 0.f;
-}
-
-void MainWindow::reload()
-{
-    initLuaItems();
 }
 
 void MainWindow::render()
@@ -843,7 +781,7 @@ void MainWindow::render()
 
         // background
         {
-            objRender::drawFilledRect(pos, size, ImColor(33, 33, 33, getMainAlpha()), WINDOW_ROUNDING);
+            objRender::drawFilledRect(pos, size, ImColor(18, 18, 18, getMainAlpha()), WINDOW_ROUNDING);
 
             // main ui (name, items, info)
             renderWindowContents();
@@ -858,7 +796,7 @@ void MainWindow::render()
             const int maxShadowRange = math::toInt(10.f * DPI_SCALE);
             ImColor shadowColor = ImColor(0, 0, 0, getMainAlpha());
             objRender::drawRectShadow(pos - shadowBorderOffset, size + shadowBorderOffset * 2, std::forward<ImColor>(shadowColor), maxShadowRange, 45.f, WINDOW_ROUNDING);
-            objRender::drawRect(pos - borderOffset, size + borderOffset, ImColor(33, 33, 33, borderBgAlpha), WINDOW_ROUNDING);
+            objRender::drawRect(pos - borderOffset, size + borderOffset, ImColor(20, 20, 20, borderBgAlpha), WINDOW_ROUNDING);
         }
     }
     ImGui::End();

@@ -75,7 +75,12 @@ struct RealItemPath
     int subTab{-1};
     int childCategory{-1};
 
-    bool canRender(const RealItemPath& other);
+    bool canRender(const RealItemPath& other)
+    {
+        return tab == other.tab
+            && subTab == other.subTab
+            && childCategory == other.childCategory;
+    }
 };
 
 class BaseItem

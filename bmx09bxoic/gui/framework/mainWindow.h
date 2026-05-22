@@ -63,10 +63,9 @@ struct tabSelectionAnimation
 
 struct mainPositions
 {
-    ImVec2 baseTabs{ 34.f, 84.f };
-    ImVec2 baseTabsContents{ 205.f, 0.f };
+    ImVec2 baseTabs{ 33.f, 79.f };
+    ImVec2 baseTabsContents{ 208.f, 0.f };
     ImVec2 baseSubTabsContents{ 220.f, 25.f };
-    ImVec2 logo{ 33.f, 22.f };
 };
 
 struct tabContentsAnimation
@@ -78,8 +77,8 @@ struct tabContentsAnimation
     float ySubChildFactor{};
     float subChildsAlpha[2]{};
 
-    render::Animation yPosAnimation{ 57.f, 24.f, 0.35f, render::ANIMATION_EASE_OUT_EXPO };
-    render::Animation ySizeAnimation{ 444.f, 477.f, 0.35f, render::ANIMATION_EASE_OUT_EXPO };
+    render::Animation yPosAnimation{ 59.f, 26.f, 0.35f, render::ANIMATION_EASE_OUT_EXPO };
+    render::Animation ySizeAnimation{ 437.f, 470.f, 0.35f, render::ANIMATION_EASE_OUT_EXPO };
     render::Animation xChildSizeAnimation{ 219.f, 451.f, 0.3f, render::ANIMATION_EASE_OUT_EXPO };
     render::Animation yChildSizeAnimation{ 410.f, 443.f, 0.35f, render::ANIMATION_EASE_OUT_EXPO };
     render::Animation selectedTabAnimation{ 0.f, 100.f, 0.35f, render::ANIMATION_EASE_OUT_EXPO, render::ANIMATION_FLAGS_REPLAY_FROM_START };
@@ -129,7 +128,6 @@ public:
     ~MainWindow();
 
     void init() override;
-    void reload() override;
     void render() override;
     void updateWindowPosOrSize() override;
     std::string getName() override;
@@ -138,15 +136,12 @@ public:
 
 private:
     void initItems();
-    void initLuaItems();
-    void initLatestLuaItem();
     void renderItem(const baseItemPtr& baseItem, const RealItemPath& currentItemPath);
     void renderChildContents(int selection, int subTabSelection, int childType);
     void updateTabsAnimation();
     void renderWindowContents();
     void renderTabs();
     void renderTabsContents();
-    void renderLogo();
     void renderBottomInfo();
 
     std::optional<RealItemPath> getRealItemPath(itemPath& path);

@@ -1243,7 +1243,8 @@ bool ImGui::Checkbox(const char* label, bool* v)
     ImGuiContext& g = *GImGui;
     const ImGuiStyle& style = g.Style;
     const ImGuiID id = window->GetID(label);
-    const ImVec2 label_size = CalcTextSize(label, NULL, true);
+    const char* label_end = FindRenderedTextEnd(label);
+    const ImVec2 label_size = CalcTextSize(label, label_end, false);
 
     const float square_sz = GetFrameHeight();
     const ImVec2 pos = window->DC.CursorPos;
@@ -1303,7 +1304,7 @@ bool ImGui::Checkbox(const char* label, bool* v)
     if (g.LogEnabled)
         LogRenderedText(&label_pos, mixed_value ? "[~]" : *v ? "[x]" : "[ ]");
     if (is_visible && label_size.x > 0.0f)
-        RenderText(label_pos, label);
+        RenderText(label_pos, label, label_end, false);
 
     IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags | ImGuiItemStatusFlags_Checkable | (*v ? ImGuiItemStatusFlags_Checked : 0));
     return pressed;

@@ -74,8 +74,8 @@ public:
     virtual int getItemType() = 0;
     virtual int getKey() = 0;
 
-    virtual uintptr_t getItemPtr() = 0;
-    virtual uintptr_t getBindPtr() = 0;
+    virtual void* getItemPtr() = 0;
+    virtual void* getBindPtr() = 0;
 
     virtual void setType(int type) = 0;
     virtual void setItemType(int type) = 0;
@@ -153,14 +153,14 @@ public:
         return bindValue;
     }
 
-    uintptr_t getItemPtr() override
+    void* getItemPtr() override
     {
-        return reinterpret_cast<uintptr_t>(itemPtr);
+        return reinterpret_cast<void*>(itemPtr);
     }
 
-    uintptr_t getBindPtr() override
+    void* getBindPtr() override
     {
-        return reinterpret_cast<uintptr_t>(bindItemPtr);
+        return reinterpret_cast<void*>(bindItemPtr);
     }
 
     void setType(int other) override
@@ -311,7 +311,7 @@ public:
     std::shared_ptr<IKeyBind> findBindByItem(T* itemPtr)
     {
         const auto it = std::find_if(keyBinds.begin(), keyBinds.end(), [itemPtr](const std::shared_ptr<IKeyBind>& bind) {
-            return bind->getItemPtr() == reinterpret_cast<uintptr_t>(itemPtr);
+            return bind->getItemPtr() == reinterpret_cast<const void*>(itemPtr);
             });
         if (it != keyBinds.end())
         {
@@ -324,7 +324,7 @@ public:
     std::shared_ptr<IKeyBind> findBind(T* bindPtr)
     {
         const auto it = std::find_if(keyBinds.begin(), keyBinds.end(), [bindPtr](const std::shared_ptr<IKeyBind>& bind) {
-            return bind->getBindPtr() == reinterpret_cast<uintptr_t>(bindPtr);
+            return bind->getBindPtr() == reinterpret_cast<const void*>(bindPtr);
             });
 
         if (it != keyBinds.end())
@@ -622,6 +622,6 @@ public:
 
 private:
     bindList keyBinds{};
-    std::unordered_map<uintptr_t, UiBlock> uiBlock{};
+    std::unordered_map<void*, UiBlock> uiBlock{};
 };
 }
