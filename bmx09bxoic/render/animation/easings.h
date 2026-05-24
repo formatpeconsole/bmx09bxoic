@@ -3,6 +3,10 @@
 
 namespace render::animation::easings
 {
+float easeLinear(float t) {
+    return t;
+}
+
 float easeInSine(float t) {
     return sinf(3.14159265f * 0.5f * t);
 }

@@ -346,6 +346,8 @@ void MainWindow::initItems()
     PLACE_SLIDER_INT(&getMenuInstance().rage.antiAim.yawOffset, ITEM_PATH("Ragebot", "Anti-Aim", "Main"), IS_VISIBLE_DUMMY);
     PLACE_CHECKBOX(&getMenuInstance().rage.antiAim.freestanding, ITEM_PATH("Ragebot", "Anti-Aim", "Main"), IS_VISIBLE_DUMMY);
     PLACE_CHECKBOX(&getMenuInstance().rage.antiAim.zeroOnPeek, ITEM_PATH("Ragebot", "Anti-Aim", "Main"), IS_VISIBLE_DUMMY);
+
+    PLACE_COMBO(&getMenuInstance().dpiScale, ITEM_PATH("Configurations"), IS_VISIBLE_DUMMY);
 }
 
 int MainWindow::getMainAlpha()
@@ -457,9 +459,9 @@ void MainWindow::updateTabsAnimation()
     tabContentsAnim.ySizeAnimation.process();
     tabContentsAnim.yChildSizeAnimation.process();
 
-    tabContentsAnim.yPos = tabContentsAnim.yPosAnimation.getAnimatedValue();
-    tabContentsAnim.ySize = tabContentsAnim.ySizeAnimation.getAnimatedValue();
-    tabContentsAnim.yChildSize = tabContentsAnim.yChildSizeAnimation.getAnimatedValue();
+    tabContentsAnim.yPos = math::toFloat(math::toInt(tabContentsAnim.yPosAnimation.getAnimatedValue()));
+    tabContentsAnim.ySize = math::toFloat(math::toInt(tabContentsAnim.ySizeAnimation.getAnimatedValue()));
+    tabContentsAnim.yChildSize = math::toFloat(math::toInt(tabContentsAnim.yChildSizeAnimation.getAnimatedValue()));
 
     {
         tabContentsAnim.selectedTabAnimation.setCondition(tabSelection == oldTabSelection);
@@ -473,6 +475,17 @@ void MainWindow::updateTabsAnimation()
     tabContentsAnim.xChildSize = math::toFloat(math::toInt(tabContentsAnim.xChildSizeAnimation.getAnimatedValue()));
 
     mainPos.baseTabsContents.y = math::toFloat(math::toInt(tabContentsAnim.yPos));
+
+    auto& secondChildAnimation = tabContentsAnim.subChildsAlphaAnimation[CHILD_SECOND];
+    secondChildAnimation.setCondition(!selectedSubTab.has_value() || selectedSubTab->childCount <= 1);
+    secondChildAnimation.process();
+
+    auto& thirdChildAnimation = tabContentsAnim.subChildsAlphaAnimation[CHILD_THIRD];
+    thirdChildAnimation.setCondition(!selectedSubTab.has_value() || selectedSubTab->childCount < 3);
+    thirdChildAnimation.process();
+
+    tabContentsAnim.ySubChildFactorAnimation.setCondition(selectedSubTab.has_value() && selectedSubTab->childCount == 3);
+    tabContentsAnim.ySubChildFactorAnimation.process();
 }
 
 void MainWindow::renderTabsContents()
@@ -580,28 +593,15 @@ void MainWindow::renderTabsContents()
                 auto prevCursorPos = ImGui::GetCursorPos();
                 ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ((defaultSubChildSizeX + 14.f) * DPI_SCALE));
                 {
-                    auto& secondChildAnimation = tabContentsAnim.subChildsAlphaAnimation[CHILD_SECOND];
-                    secondChildAnimation.setCondition(!selectedSubTab.has_value() || selectedSubTab->childCount <= 1);
-                    secondChildAnimation.process();
-                    {
-                        tabContentsAnim.ySubChildFactorAnimation.setCondition(selectedSubTab.has_value() && selectedSubTab->childCount == 3);
-                        tabContentsAnim.ySubChildFactorAnimation.process();
-                    }
-
-                    float secondChildYMultiplier = tabContentsAnim.ySubChildFactorAnimation.getAnimatedValue() * 0.01f;
-
-                    auto& thirdChildAnimation = tabContentsAnim.subChildsAlphaAnimation[CHILD_THIRD];
-                    thirdChildAnimation.setCondition(!selectedSubTab.has_value() || selectedSubTab->childCount < 3);
-                    thirdChildAnimation.process();
-
                     // place third child at half of screen of child contents rect
                     auto prevCursorPos = ImGui::GetCursorPos();
                     ImGui::SetCursorPosY(ImGui::GetCursorPosY() + (tabContentsAnim.yChildSize * 0.53f) * DPI_SCALE);
                     {
+                        auto& thirdChildAnimation = tabContentsAnim.subChildsAlphaAnimation[CHILD_THIRD];
                         int thirdChildAlpha = math::toInt(math::toFloat(mainAlpha * thirdChildAnimation.getAnimatedValue() * 0.01f));
                         if (thirdChildAlpha > 0)
                         {
-                            ImVec2 groupBoxSize = ImVec2(218.f, math::toFloat(math::toInt(tabContentsAnim.yChildSize * 0.47f))) * DPI_SCALE;
+                            ImVec2 groupBoxSize = ImVec2(218.f, math::toFloat(math::toInt((tabContentsAnim.yChildSize * 0.47f) + 0.5f))) * DPI_SCALE;
                             ImGui::BeginChild("Third##bmx09bxoic", groupBoxSize, 0, ImGuiWindowFlags_NoBackground);
                             {
                                 auto currentGroupBoxPos = ImGui::GetWindowPos() + ImGui::GetCursorPos();
@@ -643,10 +643,11 @@ void MainWindow::renderTabsContents()
                     // Y size of child will be changed
                     ImGui::SetCursorPos(prevCursorPos);
                     {
+                        auto& secondChildAnimation = tabContentsAnim.subChildsAlphaAnimation[CHILD_SECOND];
                         int secondChildAlpha = math::toInt(math::toFloat(mainAlpha * secondChildAnimation.getAnimatedValue() * 0.01f));
                         if (secondChildAlpha > 0)
                         {
-                            ImVec2 groupBoxSize = ImVec2(218.f, math::toFloat(math::toInt(tabContentsAnim.yChildSize * secondChildYMultiplier))) * DPI_SCALE;
+                            ImVec2 groupBoxSize = ImVec2(218.f, tabContentsAnim.yChildSize * (math::roundFloat(tabContentsAnim.ySubChildFactorAnimation.getAnimatedValue(), 1) * 0.01f)) * DPI_SCALE;
                             ImGui::BeginChild("Second##bmx09bxoic", groupBoxSize, 0, ImGuiWindowFlags_NoBackground);
                             {
                                 auto currentGroupBoxPos = ImGui::GetWindowPos() + ImGui::GetCursorPos();
@@ -670,6 +671,8 @@ void MainWindow::renderTabsContents()
                                         ImGui::SetCursorPos(itemsOffset);
                                         ImGui::BeginGroup();
                                         {
+                                            renderConfigsTab();
+
                                             renderChildContents(tabSelection, selectedTab.subTabSelection, CHILD_CATEGORY_SECOND);
                                         }
                                         ImGui::EndGroup();

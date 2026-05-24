@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <format>
 #include "gui.h"
 #include "framework/window.h"
 #include "framework/bindsWindow.h"
@@ -248,17 +249,19 @@ void Menu::initConfig()
 
     for (int i = 0; i < MAX_CONFIGS; ++i)
     {
-        itemsInMemory.emplace_back(ITEM_PTR_RT(rage.config[i].autoFire));
-        itemsInMemory.emplace_back(ITEM_PTR_RT(rage.config[i].autoScope));
-        itemsInMemory.emplace_back(ITEM_PTR_RT(rage.config[i].fov));
-        itemsInMemory.emplace_back(ITEM_PTR_RT(rage.config[i].multiPoints));
-        itemsInMemory.emplace_back(ITEM_PTR_RT(rage.config[i].pointHeadScale));
-        itemsInMemory.emplace_back(ITEM_PTR_RT(rage.config[i].pointBodyScale));
-        itemsInMemory.emplace_back(ITEM_PTR_RT(rage.config[i].hitChance));
-        itemsInMemory.emplace_back(ITEM_PTR_RT(rage.config[i].minDamage));
-        itemsInMemory.emplace_back(ITEM_PTR_RT(rage.config[i].preferBody));
-        itemsInMemory.emplace_back(ITEM_PTR_RT(rage.config[i].quickStop));
-        itemsInMemory.emplace_back(ITEM_PTR_RT(rage.config[i].overrideGlobal));
+        std::string configName = std::format("rage.config[{}]", i);
+        itemsInMemory.emplace_back(ITEM_PTR_RT_ARRAY(rage.config[i].autoFire, std::format("{}.autoFire", configName)));
+        itemsInMemory.emplace_back(ITEM_PTR_RT_ARRAY(rage.config[i].autoScope, std::format("{}.autoScope", configName)));
+        itemsInMemory.emplace_back(ITEM_PTR_RT_ARRAY(rage.config[i].fov, std::format("{}.fov", configName)));
+        itemsInMemory.emplace_back(ITEM_PTR_RT_ARRAY(rage.config[i].hitBoxes, std::format("{}.hitBoxes", configName)));
+        itemsInMemory.emplace_back(ITEM_PTR_RT_ARRAY(rage.config[i].multiPoints, std::format("{}.multiPoints", configName)));
+        itemsInMemory.emplace_back(ITEM_PTR_RT_ARRAY(rage.config[i].pointHeadScale, std::format("{}.pointHeadScale", configName)));
+        itemsInMemory.emplace_back(ITEM_PTR_RT_ARRAY(rage.config[i].pointBodyScale, std::format("{}.pointBodyScale", configName)));
+        itemsInMemory.emplace_back(ITEM_PTR_RT_ARRAY(rage.config[i].hitChance, std::format("{}.hitChance", configName)));
+        itemsInMemory.emplace_back(ITEM_PTR_RT_ARRAY(rage.config[i].minDamage, std::format("{}.minDamage", configName)));
+        itemsInMemory.emplace_back(ITEM_PTR_RT_ARRAY(rage.config[i].preferBody, std::format("{}.preferBody", configName)));
+        itemsInMemory.emplace_back(ITEM_PTR_RT_ARRAY(rage.config[i].quickStop, std::format("{}.quickStop", configName)));
+        itemsInMemory.emplace_back(ITEM_PTR_RT_ARRAY(rage.config[i].overrideGlobal, std::format("{}.overrideGlobal", configName)));
     }
 
     itemsInMemory.emplace_back(ITEM_PTR_RT(rage.enable));
@@ -267,5 +270,15 @@ void Menu::initConfig()
     itemsInMemory.emplace_back(ITEM_PTR_RT(rage.noSpread));
     itemsInMemory.emplace_back(ITEM_PTR_RT(rage.duckPeekAssist));
     itemsInMemory.emplace_back(ITEM_PTR_RT(rage.configSelect));
+
+    itemsInMemory.emplace_back(ITEM_PTR_RT(rage.antiAim.enable));
+    itemsInMemory.emplace_back(ITEM_PTR_RT(rage.antiAim.atTarget));
+    itemsInMemory.emplace_back(ITEM_PTR_RT(rage.antiAim.pitch));
+    itemsInMemory.emplace_back(ITEM_PTR_RT(rage.antiAim.yaw));
+    itemsInMemory.emplace_back(ITEM_PTR_RT(rage.antiAim.jitter));
+    itemsInMemory.emplace_back(ITEM_PTR_RT(rage.antiAim.jitterOffset));
+    itemsInMemory.emplace_back(ITEM_PTR_RT(rage.antiAim.yawOffset));
+    itemsInMemory.emplace_back(ITEM_PTR_RT(rage.antiAim.freestanding));
+    itemsInMemory.emplace_back(ITEM_PTR_RT(rage.antiAim.zeroOnPeek));
 }
 }

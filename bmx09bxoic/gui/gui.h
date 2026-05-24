@@ -42,8 +42,9 @@
 #define MAKE_MULTICOMBO(name, itemName, defaultValue, list) MultiComboBox name{ PUT_ITEM_DATA(itemName, defaultValue, ITEM_MULTICOMBOBOX, list) }
 #define MAKE_MULTICOMBO_RT(itemName, defaultValue, list) MultiComboBox { PUT_ITEM_DATA(itemName, defaultValue, ITEM_MULTICOMBOBOX, list) }
 
-#define ITEM_PTR(name) { reinterpret_cast<uintptr_t>(&name.item), name.item.itemType }
-#define ITEM_PTR_RT(name) std::make_pair(reinterpret_cast<uintptr_t>(&name.item), name.item.itemType)
+#define ITEM_PTR(name) { reinterpret_cast<uintptr_t>(&name), name.item.itemType }
+#define ITEM_PTR_RT(name) reinterpret_cast<uintptr_t>(&name), name.item.itemType, #name
+#define ITEM_PTR_RT_ARRAY(name, configName) reinterpret_cast<uintptr_t>(&name), name.item.itemType, configName
 
 // global
 // scar20
@@ -135,7 +136,14 @@ struct RageTab
     AntiAim antiAim{};
 };
 
-using itemsInMemoryList = std::list<std::pair<uintptr_t, int>>;
+struct itemPtr
+{
+    uintptr_t ptr{};
+    int type{};
+    std::string configSection{};
+};
+
+using itemsInMemoryList = std::list<itemPtr>;
 
 using windowPosSizeAndScale = std::tuple<ImVec2, ImVec2, float>;
 using windowInfo = std::pair<std::string, windowPosSizeAndScale>;

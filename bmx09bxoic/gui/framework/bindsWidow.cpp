@@ -11,17 +11,17 @@ void* getItemValuePointerFromItemPointer(uintptr_t ptr, int type)
     switch (type)
     {
     case ITEM_CHECKBOX:
-        return &reinterpret_cast<Item<bool>*>(ptr)->value;
+        return &reinterpret_cast<CheckBox*>(ptr)->item.value;
     case ITEM_SLIDER_INT:
-        return &reinterpret_cast<Item<int>*>(ptr)->value;
+        return &reinterpret_cast<Slider<int>*>(ptr)->item.value;
     case ITEM_SLIDER_FLOAT:
-        return &reinterpret_cast<Item<float>*>(ptr)->value;
+        return &reinterpret_cast<Slider<float>*>(ptr)->item.value;
     case ITEM_COMBOBOX:
-        return &reinterpret_cast<Item<int>*>(ptr)->value;
+        return &reinterpret_cast<ComboBox*>(ptr)->item.value;
     case ITEM_MULTICOMBOBOX:
-        return &reinterpret_cast<Item<unsigned int>*>(ptr)->value;
+        return &reinterpret_cast<MultiComboBox*>(ptr)->item.value;
     case ITEM_COLOR:
-        return &reinterpret_cast<Item<unsigned int>*>(ptr)->value;
+        return &reinterpret_cast<ColorPicker*>(ptr)->item.value;
     default:
         return {};
     }
@@ -33,14 +33,14 @@ std::optional<std::vector<std::string>> getItemList(uintptr_t ptr, int type)
     {
     case ITEM_COMBOBOX:
     {
-        auto item = reinterpret_cast<Item<int>*>(ptr);
-        return item->itemsList;
+        auto combo = reinterpret_cast<ComboBox*>(ptr);
+        return combo->item.itemsList;
     }
     break;
     case ITEM_MULTICOMBOBOX:
     {
-        auto item = reinterpret_cast<Item<unsigned int>*>(ptr);
-        return item->itemsList;
+        auto multicombo = reinterpret_cast<MultiComboBox*>(ptr);
+        return multicombo->item.itemsList;
     }
     break;
     default:
@@ -119,7 +119,7 @@ void BindsWindow::init()
 
     auto& itemsInMemory = getMenuInstance().itemsInMemory;
     for (auto& i : itemsInMemory)
-        items[getItemValuePointerFromItemPointer(i.first, i.second)] = std::make_pair(i.first, i.second);
+        items[getItemValuePointerFromItemPointer(i.ptr, i.type)] = std::make_pair(i.ptr, i.type);
 }
 
 void BindsWindow::render()
@@ -137,8 +137,12 @@ void BindsWindow::render()
     ImGui::SetNextWindowSize(size);
 
     int bindCount = 0;
+
+    ImGui::PushFont(render::getFont(FONT_ITEMS_BIG).font);
     ImGui::Begin(name.c_str(), nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+    ImGui::PopFont();
     {
+        ImGui::PushFont(render::getFont(FONT_ITEMS).font);
         auto& binds = getMenuInstance().keyBindManager.getBindList();
  
         bool noBinds = true;
@@ -170,15 +174,17 @@ void BindsWindow::render()
 
         if (noBinds)
             ImGui::Text("No active binds found.");
+
+        ImGui::PopFont();
     }
     ImGui::End();
 
     if (prevBindCount != bindCount)
     {
         if (prevBindCount > bindCount)
-            size.y -= 12.f * (prevBindCount - bindCount);
+            size.y -= 10.f * (prevBindCount - bindCount);
         else
-            size.y += 12.f * (bindCount - prevBindCount);
+            size.y += 10.f * (bindCount - prevBindCount);
 
         prevBindCount = bindCount;
     }

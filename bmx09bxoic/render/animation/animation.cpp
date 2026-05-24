@@ -10,44 +10,45 @@
 
 namespace render
 {
-float getAnimatedProgress(AnimationWay way, float t)
-{
-    switch (way)
-    {
-    case ANIMATION_LINEAR:           return t;
-    case ANIMATION_EASE_IN_SINE:     return animation::easings::easeInSine(t);
-    case ANIMATION_EASE_OUT_SINE:    return animation::easings::easeOutSine(t);
-    case ANIMATION_EASE_IN_OUT_SINE: return animation::easings::easeInOutSine(t);
-    case ANIMATION_EASE_IN_QUAD:     return animation::easings::easeInQuad(t);
-    case ANIMATION_EASE_OUT_QUAD:    return animation::easings::easeOutQuad(t);
-    case ANIMATION_EASE_IN_OUT_QUAD: return animation::easings::easeInOutQuad(t);
-    case ANIMATION_EASE_IN_CUBIC:    return animation::easings::easeInCubic(t);
-    case ANIMATION_EASE_OUT_CUBIC:   return animation::easings::easeOutCubic(t);
-    case ANIMATION_EASE_IN_OUT_CUBIC:return animation::easings::easeInOutCubic(t);
-    case ANIMATION_EASE_IN_QUART:    return animation::easings::easeInQuart(t);
-    case ANIMATION_EASE_OUT_QUART:   return animation::easings::easeOutQuart(t);
-    case ANIMATION_EASE_IN_OUT_QUART:return animation::easings::easeInOutQuart(t);
-    case ANIMATION_EASE_IN_QUINT:    return animation::easings::easeInQuint(t);
-    case ANIMATION_EASE_OUT_QUINT:   return animation::easings::easeOutQuint(t);
-    case ANIMATION_EASE_IN_OUT_QUINT:return animation::easings::easeInOutQuint(t);
-    case ANIMATION_EASE_IN_EXPO:     return animation::easings::easeInExpo(t);
-    case ANIMATION_EASE_OUT_EXPO:    return animation::easings::easeOutExpo(t);
-    case ANIMATION_EASE_IN_OUT_EXPO: return animation::easings::easeInOutExpo(t);
-    case ANIMATION_EASE_IN_CIRC:     return animation::easings::easeInCirc(t);
-    case ANIMATION_EASE_OUT_CIRC:    return animation::easings::easeOutCirc(t);
-    case ANIMATION_EASE_IN_OUT_CIRC: return animation::easings::easeInOutCirc(t);
-    case ANIMATION_EASE_IN_BACK:     return animation::easings::easeInBack(t);
-    case ANIMATION_EASE_OUT_BACK:    return animation::easings::easeOutBack(t);
-    case ANIMATION_EASE_IN_OUT_BACK: return animation::easings::easeInOutBack(t);
-    case ANIMATION_EASE_IN_ELASTIC:  return animation::easings::easeInElastic(t);
-    case ANIMATION_EASE_OUT_ELASTIC: return animation::easings::easeOutElastic(t);
-    case ANIMATION_EASE_IN_OUT_ELASTIC: return animation::easings::easeInOutElastic(t);
-    case ANIMATION_EASE_IN_BOUNCE: return animation::easings::easeInBounce(t);
-    case ANIMATION_EASE_OUT_BOUNCE:  return animation::easings::easeOutBounce(t);
-    case ANIMATION_EASE_IN_OUT_BOUNCE:return animation::easings::easeInOutBounce(t);
+using EasingFunc = float(*)(float);
+constexpr EasingFunc easingTable[] = {
+    animation::easings::easeLinear, // ANIMATION_LINEAR
+    animation::easings::easeInSine, // ANIMATION_EASE_IN_SINE
+    animation::easings::easeOutSine, // ANIMATION_EASE_OUT_SINE
+    animation::easings::easeInOutSine, // ANIMATION_EASE_IN_OUT_SINE
+    animation::easings::easeInQuad, // ANIMATION_EASE_IN_QUAD
+    animation::easings::easeOutQuad, // ANIMATION_EASE_OUT_QUAD
+    animation::easings::easeInOutQuad, // ANIMATION_EASE_IN_OUT_QUAD
+    animation::easings::easeInCubic, // ANIMATION_EASE_IN_CUBIC
+    animation::easings::easeOutCubic, // ANIMATION_EASE_OUT_CUBIC
+    animation::easings::easeInOutCubic, // ANIMATION_EASE_IN_OUT_CUBIC
+    animation::easings::easeInQuart, // ANIMATION_EASE_IN_QUART
+    animation::easings::easeOutQuart, // ANIMATION_EASE_OUT_QUART
+    animation::easings::easeInOutQuart, // ANIMATION_EASE_IN_OUT_QUART
+    animation::easings::easeInQuint, // ANIMATION_EASE_IN_QUINT
+    animation::easings::easeOutQuint, // ANIMATION_EASE_OUT_QUINT
+    animation::easings::easeInOutQuint, // ANIMATION_EASE_IN_OUT_QUINT
+    animation::easings::easeInExpo, // ANIMATION_EASE_IN_EXPO
+    animation::easings::easeOutExpo, // ANIMATION_EASE_OUT_EXPO
+    animation::easings::easeInOutExpo, // ANIMATION_EASE_IN_OUT_EXPO
+    animation::easings::easeInCirc, // ANIMATION_EASE_IN_CIRC
+    animation::easings::easeOutCirc, // ANIMATION_EASE_OUT_CIRC
+    animation::easings::easeInOutCirc, // ANIMATION_EASE_IN_OUT_CIRC
+    animation::easings::easeInBack, // ANIMATION_EASE_IN_BACK
+    animation::easings::easeOutBack, // ANIMATION_EASE_OUT_BACK
+    animation::easings::easeInOutBack, // ANIMATION_EASE_IN_OUT_BACK
+    animation::easings::easeInElastic, // ANIMATION_EASE_IN_ELASTIC
+    animation::easings::easeOutElastic, // ANIMATION_EASE_OUT_ELASTIC
+    animation::easings::easeInOutElastic, // ANIMATION_EASE_IN_OUT_ELASTIC
+    animation::easings::easeInBounce, // ANIMATION_EASE_IN_BOUNCE
+    animation::easings::easeOutBounce, // ANIMATION_EASE_OUT_BOUNCE
+    animation::easings::easeInOutBounce, // ANIMATION_EASE_IN_OUT_BOUNCE
+};
 
-    default: return t;
-    }
+inline float getAnimatedProgress(AnimationWay way, float t)
+{
+    auto index = static_cast<std::size_t>(way);
+    return easingTable[index](t);
 }
 
 Animation::Animation(float start, float end, float duration, AnimationWay way, uint8_t flags)
@@ -62,7 +63,6 @@ void Animation::setCondition(bool triggerCondition)
 void Animation::process()
 {
     auto now = getClockInstance().getTime();
-
     if (previousCondition != condition)
     {
         timeOnTrigger = now;
@@ -79,12 +79,29 @@ void Animation::process()
         return;
     }
 
-    std::chrono::duration<float> elapsed = now - timeOnTrigger;
-    animationProgress = elapsed.count() / duration;
-    animationProgress = std::clamp(animationProgress, 0.f, 1.f);
+    if (animationProgress < 1.f)
+    {
+        std::chrono::duration<float> elapsed = now - timeOnTrigger;
+        animationProgress = elapsed.count() / duration;
+        animationProgress = std::clamp(animationProgress, 0.f, 1.f);
 
-    float progress = getAnimatedProgress(animationWay, animationProgress);
-    animatedValue = std::lerp(begin, condition ? end : start, progress);
+        float progress = getAnimatedProgress(animationWay, animationProgress);
+        animatedValue = std::lerp(begin, condition ? end : start, progress);
+    }
+    else
+    {
+        if (animatedValue == 0.f && begin == 0.f)
+        {
+            if ((animationFlags & ANIMATION_FLAGS_REPLAY_FROM_START))
+                begin = end;
+            else if ((animationFlags & ANIMATION_FLAGS_REPLAY_FROM_END))
+                begin = start;
+            else
+                begin = condition ? end : start;
+
+            animatedValue = begin;
+        }
+    }
 }
 
 float Animation::getAnimatedValue()

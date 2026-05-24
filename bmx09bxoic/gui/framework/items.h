@@ -104,7 +104,7 @@ public:
     UiItem(T* itemPtr, RealItemPath realItemPath, itemPath path, isVisibleFn&& visibleCallback)
         : path(path), realItemPath(realItemPath),
         itemPtr(itemPtr), itemType(itemPtr->item.itemType),
-        visibleCallback(std::forward<isVisibleFn>(visibleCallback)) {}
+        visibleCallback(std::forward<isVisibleFn>(visibleCallback)) { createKey(); }
 
     bool isVisible() override
     {

@@ -8,8 +8,8 @@
 #include "../gui/binds/utils.h"
 #include "../utils/uuid.h"
 
-#define SAVE_ITEM(section, element) addItem(section[getItemName(element.item)], element.item);
-#define LOAD_ITEM(section, element) loadItem(section[getItemName(element.item)], element.item);
+#define SAVE_ITEM(section, element) addItem(section, element.item);
+#define LOAD_ITEM(section, element) loadItem(section, element.item);
 
 namespace config
 {
@@ -22,12 +22,6 @@ std::string readFile(std::string fileName)
         return "";
 
     return std::string((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-}
-
-template<typename T>
-std::string getItemName(const Item<T>& item)
-{
-    return getItemType(item.itemType) + "-" + item.name;
 }
 
 template<typename T>
@@ -112,31 +106,30 @@ void loadConfig()
     auto& instance = getMenuInstance();
     instance.keyBindManager.eraseAllBinds();
 
-    auto& rageSection = jsonResult["Rage"];
-    if (!rageSection.empty())
+    for (auto& item : instance.itemsInMemory)
     {
-        for (int i = 0; i < MAX_CONFIGS; ++i)
+        auto& section = jsonResult[item.configSection];
+        switch (item.type)
         {
-            LOAD_ITEM(rageSection, instance.rage.config[i].autoFire);
-            LOAD_ITEM(rageSection, instance.rage.config[i].autoScope);
-            LOAD_ITEM(rageSection, instance.rage.config[i].fov);
-            LOAD_ITEM(rageSection, instance.rage.config[i].hitBoxes);
-            LOAD_ITEM(rageSection, instance.rage.config[i].multiPoints);
-            LOAD_ITEM(rageSection, instance.rage.config[i].pointHeadScale);
-            LOAD_ITEM(rageSection, instance.rage.config[i].pointBodyScale);
-            LOAD_ITEM(rageSection, instance.rage.config[i].hitChance);
-            LOAD_ITEM(rageSection, instance.rage.config[i].minDamage);
-            LOAD_ITEM(rageSection, instance.rage.config[i].preferBody);
-            LOAD_ITEM(rageSection, instance.rage.config[i].quickStop);
-            LOAD_ITEM(rageSection, instance.rage.config[i].overrideGlobal);
+        case ITEM_CHECKBOX:
+            LOAD_ITEM(section, (*reinterpret_cast<CheckBox*>(item.ptr)));
+            break;
+        case ITEM_SLIDER_INT:
+            LOAD_ITEM(section, (*reinterpret_cast<Slider<int>*>(item.ptr)));
+            break;
+        case ITEM_SLIDER_FLOAT:
+            LOAD_ITEM(section, (*reinterpret_cast<Slider<float>*> (item.ptr)));
+            break;
+        case ITEM_COMBOBOX:
+            LOAD_ITEM(section, (*reinterpret_cast<ComboBox*>(item.ptr)));
+            break;
+        case ITEM_MULTICOMBOBOX:
+            LOAD_ITEM(section, (*reinterpret_cast<MultiComboBox*>(item.ptr)));
+            break;
+        case ITEM_COLOR:
+            LOAD_ITEM(section, (*reinterpret_cast<ColorPicker*>(item.ptr)));
+            break;
         }
-
-        LOAD_ITEM(rageSection, instance.rage.enable);
-        LOAD_ITEM(rageSection, instance.rage.autoRevolver);
-        LOAD_ITEM(rageSection, instance.rage.doubleTap);
-        LOAD_ITEM(rageSection, instance.rage.noSpread);
-        LOAD_ITEM(rageSection, instance.rage.duckPeekAssist);
-        LOAD_ITEM(rageSection, instance.rage.configSelect);
     }
 }
 
@@ -147,30 +140,30 @@ void saveConfig()
     nlohmann::json jsonToWrite{};
 
     auto& instance = getMenuInstance();
-    auto& rageSection = jsonToWrite["Rage"];
+    for (auto& item : instance.itemsInMemory)
     {
-        for (int i = 0; i < MAX_CONFIGS; ++i)
+        auto& section = jsonToWrite[item.configSection];
+        switch (item.type)
         {
-            SAVE_ITEM(rageSection, instance.rage.config[i].autoFire);
-            SAVE_ITEM(rageSection, instance.rage.config[i].autoScope);
-            SAVE_ITEM(rageSection, instance.rage.config[i].fov);
-            SAVE_ITEM(rageSection, instance.rage.config[i].hitBoxes);
-            SAVE_ITEM(rageSection, instance.rage.config[i].multiPoints);
-            SAVE_ITEM(rageSection, instance.rage.config[i].pointHeadScale);
-            SAVE_ITEM(rageSection, instance.rage.config[i].pointBodyScale);
-            SAVE_ITEM(rageSection, instance.rage.config[i].hitChance);
-            SAVE_ITEM(rageSection, instance.rage.config[i].minDamage);
-            SAVE_ITEM(rageSection, instance.rage.config[i].preferBody);
-            SAVE_ITEM(rageSection, instance.rage.config[i].quickStop);
-            SAVE_ITEM(rageSection, instance.rage.config[i].overrideGlobal);
+        case ITEM_CHECKBOX:
+            SAVE_ITEM(section, (*reinterpret_cast<CheckBox*>(item.ptr)));
+            break;
+        case ITEM_SLIDER_INT:
+            SAVE_ITEM(section, (*reinterpret_cast<Slider<int>*>(item.ptr)));
+            break;
+        case ITEM_SLIDER_FLOAT:
+            SAVE_ITEM(section, (*reinterpret_cast<Slider<float>*> (item.ptr)));
+            break;
+        case ITEM_COMBOBOX:
+            SAVE_ITEM(section, (*reinterpret_cast<ComboBox*>(item.ptr)));
+            break;
+        case ITEM_MULTICOMBOBOX:
+            SAVE_ITEM(section, (*reinterpret_cast<MultiComboBox*>(item.ptr)));
+            break;
+        case ITEM_COLOR:
+            SAVE_ITEM(section, (*reinterpret_cast<ColorPicker*>(item.ptr)));
+            break;
         }
-
-        SAVE_ITEM(rageSection, instance.rage.enable);
-        SAVE_ITEM(rageSection, instance.rage.autoRevolver);
-        SAVE_ITEM(rageSection, instance.rage.doubleTap);
-        SAVE_ITEM(rageSection, instance.rage.noSpread);
-        SAVE_ITEM(rageSection, instance.rage.duckPeekAssist);
-        SAVE_ITEM(rageSection, instance.rage.configSelect);
     }
 
     configFile << jsonToWrite;
