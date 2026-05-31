@@ -135,7 +135,7 @@ public:
     std::optional<RealItemPath> getRealItemPath(itemPath& path);
     std::optional<std::pair<uintptr_t, int>> findItemByPath(const itemPath& path);
 
-    void addCheckBox(std::string name, itemPath&& path, isVisibleFn&& isVisible);
+    std::shared_ptr<BaseItem> addCheckBox(std::string name, itemPath&& path, isVisibleFn&& isVisible);
 
     void removeLoadedLuaItems(std::string luaName);
 

@@ -184,7 +184,7 @@ static inline std::string getLuaItemNameInConfig(std::string name)
     return std::format("lua.{}.item.{}", getLuaStateInstance().getLoadedLuaName(), name);
 }
 
-void ItemsManager::addCheckBox(std::string name, itemPath&& path, isVisibleFn&& isVisible)
+std::shared_ptr<BaseItem> ItemsManager::addCheckBox(std::string name, itemPath&& path, isVisibleFn&& isVisible)
 {
     auto luaName = getLuaStateInstance().getLoadedLuaName();
 
@@ -204,6 +204,7 @@ void ItemsManager::addCheckBox(std::string name, itemPath&& path, isVisibleFn&& 
     auto& latestCheckBox = std::any_cast<CheckBox&>(latestItem.item);
     getMenuInstance().addCustomItem(latestCheckBox, getLuaItemNameInConfig(name));
     PLACE_CHECKBOX(&latestCheckBox, std::forward<itemPath>(localPathTemp), std::forward<isVisibleFn>(latestItem.isVisible));
+    return items.back();
 }
 
 void ItemsManager::removeLoadedLuaItems(std::string luaName)

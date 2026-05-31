@@ -87,6 +87,7 @@ class BaseItem
 {
 public:
     virtual bool isVisible() = 0;
+    virtual void setVisible(bool visible) = 0;
     virtual int getItemType() = 0;
     virtual RealItemPath getRealItemPath() = 0;
     virtual uintptr_t getItemPtr() = 0;
@@ -104,14 +105,24 @@ public:
     UiItem(T* itemPtr, RealItemPath realItemPath, itemPath path, isVisibleFn&& visibleCallback)
         : path(path), realItemPath(realItemPath),
         itemPtr(itemPtr), itemType(itemPtr->item.itemType),
-        visibleCallback(std::forward<isVisibleFn>(visibleCallback)) { createKey(); }
+        visibleCallback(std::forward<isVisibleFn>(visibleCallback)), isVisibleState(true) { createKey(); }
 
     bool isVisible() override
     {
+        // this thing is used ONLY in LUA API
+        // if state is false that means item won't be visible anymore
+        if (!isVisibleState)
+            return false;
+
         if (visibleCallback.has_value())
             return visibleCallback.value()();
 
-        return true;
+        return isVisibleState;
+    }
+
+    void setVisible(bool visible) override
+    {
+        isVisibleState = visible;
     }
 
     int getItemType() override
@@ -152,6 +163,7 @@ private:
     isVisibleFn visibleCallback{};
     T* itemPtr{};
     int itemType{};
+    bool isVisibleState{};
 };
 
 }
