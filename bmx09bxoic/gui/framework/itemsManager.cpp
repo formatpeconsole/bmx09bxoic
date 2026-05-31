@@ -179,6 +179,15 @@ static inline luaItem getCheckBoxItem(std::string name, isVisibleFn&& isVisible)
     return result;
 }
 
+static inline luaItem getSliderIntItem(std::string name, int min, int max, isVisibleFn&& isVisible)
+{
+    luaItem result{};
+    result.isVisible = isVisible;
+    result.itemType = ITEM_SLIDER_INT;
+    result.item = MAKE_SLIDER_RT(name, 0, min, max);
+    return result;
+}
+
 static inline std::string getLuaItemNameInConfig(std::string name)
 {
     return std::format("lua.{}.item.{}", getLuaStateInstance().getLoadedLuaName(), name);
@@ -204,6 +213,29 @@ std::shared_ptr<BaseItem> ItemsManager::addCheckBox(std::string name, itemPath&&
     auto& latestCheckBox = std::any_cast<CheckBox&>(latestItem.item);
     getMenuInstance().addCustomItem(latestCheckBox, getLuaItemNameInConfig(name));
     PLACE_CHECKBOX(&latestCheckBox, std::forward<itemPath>(localPathTemp), std::forward<isVisibleFn>(latestItem.isVisible));
+    return items.back();
+}
+
+std::shared_ptr<BaseItem> ItemsManager::addSliderInt(std::string name, int min, int max, itemPath&& path, isVisibleFn&& isVisible)
+{
+    auto luaName = getLuaStateInstance().getLoadedLuaName();
+
+    auto localPathTemp = std::move(path);
+    localPathTemp.push_back(luaName);
+
+    auto& luaItems = getMenuInstance().luaItems;
+
+    auto currentLua = luaItems.find(luaName);
+    if (currentLua == luaItems.end())
+        luaItems.insert(std::make_pair(luaName, luaItemsList{}));
+
+    auto& itemsList = luaItems[luaName];
+    itemsList.emplace_back(getSliderIntItem(name, min, max, std::forward<isVisibleFn>(isVisible)));
+
+    auto& latestItem = itemsList.back();
+    auto& latestSliderInt = std::any_cast<Slider<int>&>(latestItem.item);
+    getMenuInstance().addCustomItem(latestSliderInt, getLuaItemNameInConfig(name));
+    PLACE_SLIDER_INT(&latestSliderInt, std::forward<itemPath>(localPathTemp), std::forward<isVisibleFn>(latestItem.isVisible));
     return items.back();
 }
 
