@@ -2,13 +2,14 @@
 
 W.I.P DLC for cs2
 
-Что есть:
-- UI Framework (Animations, LUA-related ui architecture, multi-binds system)
+What it have:
+- UI Framework (Animations, Lua-related ui architecture, multi-binds system)
 - MultiThreading (ThreadPool)
 - Config System
 - D3D Hooks
-- Correct WINApi key handler
+- Correct WinAPI key handler
+- Lua API (W.I.P)
 
-![](https://i.imgur.com/zLSa9M6.png)
+![](https://i.imgur.com/ofv5CWe.gif)
 
 Made by miraclestar
